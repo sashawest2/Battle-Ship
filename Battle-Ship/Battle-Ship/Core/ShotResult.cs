@@ -4,5 +4,6 @@ public enum ShotResult
 {
     Miss,
     Hit,
-    AlreadyShot
+    AlreadyShot,
+    Sunk
 }

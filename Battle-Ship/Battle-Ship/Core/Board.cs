@@ -3,7 +3,7 @@ namespace Battle_Ship;
 public class Board
 {
     private List<Ship> Ships = new List<Ship>();
-    char[,] grid = new char[10, 10];
+    public CellState[,] grid = new CellState[10, 10];
 
     public Board()
     {
@@ -11,19 +11,11 @@ public class Board
         {
             for (int j = 0; j < grid.GetLength(1); j++)
             {
-                grid[i, j] = ' ';
+                grid[i, j] = CellState.Empty;
             }
         }
     }
     
-    bool OcupiesCell(int row, int col)
-    {
-        if (grid[row, col] == 'S')
-        {
-            return true;
-        }
-        return false;
-    }
 
 
     public void PlaceShipDirectly(Ship ship)
@@ -32,38 +24,75 @@ public class Board
 
         foreach (var cell in ship.Cells)
         {
-            grid[cell.Row, cell.Col] = 'S';
+            grid[cell.Row, cell.Col] = CellState.Ship;
         }
     }
     
     public ShotResult ReceiveShot(int row, int col)
     {
-        if (OcupiesCell(row, col))
+        if (grid[row, col] == CellState.Hit)
         {
-            grid[row, col] = 'H';
-            Console.WriteLine("Попадание!");
-            return ShotResult.Hit;
-        }
-        else if (grid[row, col] == 'H')
-        {
-            Console.WriteLine("Клетка была отмеченна раннее");
             return ShotResult.AlreadyShot;
         }
-        else
+        
+        foreach (var ship in Ships)
         {
-            Console.WriteLine("Промах");
-            return ShotResult.Miss;
+            if (ship.OccupiesCell(row, col))
+            {
+                grid[row, col] = CellState.Hit;
+                ship.RegisterHit(row, col);
+                if (ship.IsSunk())
+                {
+                    foreach (var cell in ship.Cells)
+                    {
+                        grid[cell.Row, cell.Col] = CellState.Sunk;
+                    }
+                    return ShotResult.Sunk;
+                }
+                return ShotResult.Hit;
+            }
         }
+        grid[row, col] = CellState.Miss;
+        return ShotResult.Miss;
     }
 
-    private void MarkShot(int row, int col)
+    private char GetDisplaySymbol(CellState state, bool hideShips)
     {
-        grid[row, col] = 'X';
+        return state switch
+        {
+            CellState.Empty => '.',
+            CellState.Ship => hideShips ? '.' : 'S',
+            CellState.Hit => 'H',
+            CellState.Miss => 'M',
+            CellState.Sunk => 'X',
+            _ => '.'
+        };
     }
 
-    private void MarkMiss(int row, int col)
+    private void PrintResult(ShotResult result)
     {
-        grid[row, col] = 'O';
+        Console.Clear();
+
+        if (result == ShotResult.Miss)
+        {
+            Console.WriteLine("Miss");
+        }
+
+        if (result == ShotResult.AlreadyShot)
+        {
+            Console.WriteLine("You've already shot to that cell, please choose another one!");
+        }
+
+        if (result == ShotResult.Sunk)
+        {
+            Console.WriteLine("Congratulations! Ship sank");
+        }
+
+        if (result == ShotResult.Hit)
+        {
+            Console.WriteLine("Hit!");
+        }
+        
     }
 
     public void MakeMove()
@@ -75,17 +104,9 @@ public class Board
             int row = int.Parse(cell[0]);
             int col = int.Parse(cell[1]);
 
-            if (OcupiesCell(row, col))
-            {
-                MarkShot(row, col);
-                PrintGrid();
-            }
-            else
-            {
-                MarkMiss(row, col);
-                Console.WriteLine("мимо");
-                PrintGrid();
-            }
+            var shotResult = ReceiveShot(row, col);
+            PrintResult(shotResult);
+            PrintGrid();
         }
 }
     
@@ -121,7 +142,7 @@ public class Board
             Console.Write(" ");
             for (int j = 0; j < grid.GetLength(1); j++)
             {
-                Console.Write(grid[i, j]);
+                Console.Write(GetDisplaySymbol(grid[i, j], false));
                 Console.Write(" | ");
                 counter++;
 
