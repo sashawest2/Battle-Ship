@@ -4,6 +4,7 @@ public class Board
 {
     private List<Ship> Ships = new List<Ship>();
     public CellState[,] grid = new CellState[10, 10];
+    private int counter = 0;
 
     public Board()
     {
@@ -26,6 +27,18 @@ public class Board
         {
             grid[cell.Row, cell.Col] = CellState.Ship;
         }
+    }
+
+    public bool IsAllShipsSunk()
+    {
+        foreach (var ship in Ships)
+        {
+            if (!ship.IsSunk())
+            {
+                return false;
+            }
+        }
+        return true;
     }
     
     public ShotResult ReceiveShot(int row, int col)
@@ -97,7 +110,7 @@ public class Board
 
     public void MakeMove()
     {
-        while (true)
+        while (!IsAllShipsSunk())
         {
                 var cell = Console.ReadLine().Split(' ');
             
@@ -106,8 +119,10 @@ public class Board
 
             var shotResult = ReceiveShot(row, col);
             PrintResult(shotResult);
+            counter++;
             PrintGrid();
         }
+        Console.WriteLine($"Поздравляем, вы потопили весь флот! \nВы справились за {counter} ходов.");
 }
     
     public void PrintGrid()
