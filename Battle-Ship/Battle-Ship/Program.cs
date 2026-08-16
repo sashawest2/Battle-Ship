@@ -52,6 +52,15 @@ void SetupFleetInteractive()
         do
         {
                 GetRowAndCol();
+                var cell = (row, col);  
+
+                if (board.IsCellAroundShip(cell) || board.grid[cell.row, cell.col] != CellState.Empty)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("This cell is around another ship or not empty!");
+                    Console.ResetColor();
+                    continue;   
+                }
                 isHorizontal = GetDirection();
                 GetSize();
                 

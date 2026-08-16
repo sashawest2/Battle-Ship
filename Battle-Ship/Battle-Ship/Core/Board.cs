@@ -31,15 +31,25 @@ public class Board
                 return false;
             }
 
-            foreach (var existingShip in Ships)
+            if (IsCellAroundShip(cell))
             {
-                if (existingShip.CellsAroundShip.Contains(cell))
-                {
-                    return false;
-                }
+                return false;
             }
+            
         }
         return true;
+    }
+
+    public bool IsCellAroundShip((int row, int col) cell)
+    {
+        foreach (var existingShip in Ships)
+        {
+            if (existingShip.CellsAroundShip.Contains(cell))
+            {
+                return true;
+            }
+        }
+        return false;
     }
     
 
