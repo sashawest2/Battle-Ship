@@ -1,29 +1,85 @@
 ﻿using Battle_Ship;
 
 Board board = new Board();
-List<Ship> ships = new List<Ship>()
-{
-    new Ship(1, 3, 1, false),
-    new Ship(2, 9, 1, false),
-    new Ship(7, 9, 1, false),
-    new Ship(8, 8, 1, false),
-    new Ship(3, 1, 2, false),
-    new Ship(2, 7, 2, false),
-    new Ship(3, 3, 2, true),
-    new Ship(9, 4, 3, true),
-    new Ship(7, 2, 3, true),
-    new Ship(5, 3, 4, true)
-    
-    
-};
+int row = 0;
+int col = 0;
+bool isHorizontal = false;
+int size = 0;
+bool isPlaced = false;
 
-foreach (Ship ship in ships)
+void GetRowAndCol()
 {
-    board.PlaceShipDirectly(ship);
+    Console.Write("Please enter start row and column for a ship:");
+    while (!Helper.TryParseCoordinate(Console.ReadLine(), out row, out col))
+    {
+            Console.WriteLine("Invalid coordinate! Try again!");
+    }
 }
-board.PrintGrid();
 
-board.MakeMove();
+bool GetDirection()
+{
+    Console.Write("What direction your ship is? (horizontal or vertical)");
+    
+    while (true)
+    {
+        string input = Console.ReadLine().Trim().ToLower();
+        
+        if (input == "horizontal")
+        {
+            return true;
+        }
+
+        if (input == "vertical")
+        {
+            return false;
+        }
+        Console.WriteLine("Unknown direction");
+    }
+}
+
+void GetSize()
+{
+    Console.Write("Please enter size of the ship:");
+    while (!int.TryParse(Console.ReadLine(), out size) || size <= 0 || size > 4)
+    {
+            Console.WriteLine("Invalid coordinate! Try again!");
+    }
+}
+
+void SetupFleetInteractive()
+{
+    {
+        do
+        {
+                GetRowAndCol();
+                isHorizontal = GetDirection();
+                GetSize();
+                
+        
+            Ship ship = new Ship(row, col, size, isHorizontal);
+        
+            if (!board.PlaceShip(ship))
+            {
+                Console.WriteLine("Can't place ship! Please, try again!");
+                isPlaced = false;
+            }
+            else
+            {
+                Console.WriteLine("Ship placed!");
+                isPlaced = true;
+                board.Print();
+            } 
+        } while (!isPlaced);
+        
+    }
+}
+
+while (true)
+{
+    SetupFleetInteractive();
+}
+
+
 
 
 

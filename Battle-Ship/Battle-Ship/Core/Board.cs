@@ -16,16 +16,50 @@ public class Board
             }
         }
     }
+
+    public bool CanPlaceShip(Ship ship)
+    {
+        foreach (var cell in ship.Cells)
+        {
+            if (cell.Row < 0 || cell.Row > 9 || cell.Col < 0 || cell.Col > 9)
+            {
+                return false;
+            }
+
+            if (grid[cell.Row, cell.Col] != CellState.Empty)
+            {
+                return false;
+            }
+
+            foreach (var existingShip in Ships)
+            {
+                if (existingShip.CellsAroundShip.Contains(cell))
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
     
 
 
-    public void PlaceShipDirectly(Ship ship)
+    public bool PlaceShip(Ship ship)
     {
-        Ships.Add(ship);
-
-        foreach (var cell in ship.Cells)
+        if (CanPlaceShip(ship))
         {
-            grid[cell.Row, cell.Col] = CellState.Ship;
+            foreach (var cell in ship.Cells)
+            {
+                grid[cell.Row, cell.Col] = CellState.Ship;
+            }
+            
+            Ships.Add(ship);
+
+            return true;
+        }
+        else
+        {
+            return false;
         }
     }
 
@@ -112,20 +146,24 @@ public class Board
     {
         while (!IsAllShipsSunk())
         {
-                var cell = Console.ReadLine().Split(' ');
-            
-            int row = int.Parse(cell[0]);
-            int col = int.Parse(cell[1]);
+            int row;
+            int col;
 
+            if (!Helper.TryParseCoordinate(Console.ReadLine(), out row, out col))
+            {
+                Console.WriteLine("Invalid coordinate! Try again!");
+                continue;
+            }
             var shotResult = ReceiveShot(row, col);
             PrintResult(shotResult);
             counter++;
-            PrintGrid();
+            Print();
+            
         }
         Console.WriteLine($"Поздравляем, вы потопили весь флот! \nВы справились за {counter} ходов.");
 }
     
-    public void PrintGrid()
+    public void Print()
     {
         int counter = 0;
 
