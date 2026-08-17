@@ -4,7 +4,7 @@ public class Board
 {
     private List<Ship> Ships = new List<Ship>();
     public CellState[,] grid = new CellState[10, 10];
-    private int counter = 0;
+    private int moveCounter = 0;
 
     public Board()
     {
@@ -26,12 +26,7 @@ public class Board
                 return false;
             }
 
-            if (grid[cell.Row, cell.Col] != CellState.Empty)
-            {
-                return false;
-            }
-
-            if (IsCellAroundShip(cell))
+            if (!IsCellEmpty(cell))
             {
                 return false;
             }
@@ -40,16 +35,22 @@ public class Board
         return true;
     }
 
-    public bool IsCellAroundShip((int row, int col) cell)
+    public bool IsCellEmpty((int row, int col) cell)
     {
         foreach (var existingShip in Ships)
         {
-            if (existingShip.CellsAroundShip.Contains(cell))
+            if (existingShip.IsCellAroundShip(cell))
             {
-                return true;
+                return false;
             }
         }
-        return false;
+        
+        if (grid[cell.row, cell.col] != CellState.Empty)
+        {
+            return false;
+        }
+        
+        return true;
     }
     
 
@@ -159,18 +160,18 @@ public class Board
             int row;
             int col;
 
-            if (!Helper.TryParseCoordinate(Console.ReadLine(), out row, out col))
+            if (!UserInputHelper.TryParseCoordinate(Console.ReadLine(), out row, out col))
             {
                 Console.WriteLine("Invalid coordinate! Try again!");
                 continue;
             }
             var shotResult = ReceiveShot(row, col);
             PrintResult(shotResult);
-            counter++;
+            moveCounter++;
             Print();
             
         }
-        Console.WriteLine($"Поздравляем, вы потопили весь флот! \nВы справились за {counter} ходов.");
+        Console.WriteLine($"Поздравляем, вы потопили весь флот! \nВы справились за {moveCounter} ходов.");
 }
     
     public void Print()

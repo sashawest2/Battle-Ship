@@ -4,8 +4,8 @@ public class Ship
 {
     int Size { get; set; }
     public List<(int Row, int Col)> Cells { get; set; }
-    public List<(int, int)> HitCells  { get; set; }
-    public List<(int, int)> CellsAroundShip { get; set; }
+    private List<(int, int)> HitCells  { get; set; }
+    private List<(int, int)> CellsAroundShip { get; set; }
 
     private void AddCellAroundShip(int row, int col)
     {
@@ -111,6 +111,10 @@ public class Ship
         if (HitCells.Count != Cells.Count) return false;
         return true;
     }
-    
+
+    public bool IsCellAroundShip((int row, int col) cell)
+    {
+        return CellsAroundShip.Contains(cell);
+    }
     
 }
