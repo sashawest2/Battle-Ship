@@ -5,6 +5,7 @@ public class Board
     private List<Ship> Ships = new List<Ship>();
     public CellState[,] grid = new CellState[10, 10];
     private int moveCounter = 0;
+    Random random = new Random();
 
     public Board()
     {
@@ -52,7 +53,53 @@ public class Board
         
         return true;
     }
-    
+
+    public void PlaceFleetRandomly(List<Ship> fleet)
+    {
+        AddRandomShip(1, fleet);
+        AddRandomShip(2, fleet);
+        AddRandomShip(3, fleet);
+        AddRandomShip(4, fleet);
+    }
+
+    private void AddRandomShip(int size, List<Ship> fleet)
+    {     
+        bool isAdded = false;
+        
+        for (int i = 0; i < 5 - size; i++)
+        {
+            
+            do
+            {
+                Ship? ship = PlaceShipRandomly(size);
+                if (ship != null)
+                {
+                    fleet.Add(ship);
+                    isAdded = true;
+                }
+                
+            } while (!isAdded);
+        }
+    }
+
+    private Ship? PlaceShipRandomly(int size)
+    {
+        
+        for (int i = 0; i < 100; i++)
+        {
+            int row = random.Next(10);
+            int col = random.Next(10);
+            bool horizontal = random.Next(2) == 0;
+            
+            Ship ship = new Ship(row, col, size, horizontal);
+            
+            if (PlaceShip(ship))
+            {
+                return ship;
+            }
+        }
+        return null;
+    }
 
 
     public bool PlaceShip(Ship ship)

@@ -40,10 +40,26 @@ void SetupFleetInteractive()
     }
 }
 
-while (true)
+Console.WriteLine("Do you want to place your fleet randomly or by yourself? (r - random, y - yourself)");
+
+string answer = Console.ReadLine().Trim().ToLower();
+
+if (answer == "y")
 {
-    SetupFleetInteractive();
+    while (true)
+    {
+        SetupFleetInteractive();
+    }
 }
+
+if (answer == "r")
+{
+    List<Ship> fleet = new List<Ship>();
+    
+    board.PlaceFleetRandomly(fleet);
+    board.Print();
+}
+
 
 
 
