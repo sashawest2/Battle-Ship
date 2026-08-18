@@ -1,29 +1,67 @@
 ﻿using Battle_Ship;
 
 Board board = new Board();
-List<Ship> ships = new List<Ship>()
-{
-    new Ship(1, 3, 1, false),
-    new Ship(2, 9, 1, false),
-    new Ship(7, 9, 1, false),
-    new Ship(8, 8, 1, false),
-    new Ship(3, 1, 2, false),
-    new Ship(2, 7, 2, false),
-    new Ship(3, 3, 2, true),
-    new Ship(9, 4, 3, true),
-    new Ship(7, 2, 3, true),
-    new Ship(5, 3, 4, true)
-    
-    
-};
+bool isPlaced = false;
 
-foreach (Ship ship in ships)
+
+void SetupFleetInteractive()
 {
-    board.PlaceShipDirectly(ship);
+    {
+        do
+        {
+               (int row, int col) cell = UserInputHelper.GetRowAndCol(); 
+
+                if (!board.IsCellEmpty(cell))
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("This cell is around another ship or not empty!");
+                    Console.ResetColor();
+                    continue;   
+                }
+
+                int size = UserInputHelper.GetSize();
+                bool orientation = UserInputHelper.GetOrientation();
+        
+            Ship ship = new Ship(cell.row, cell.col, size, orientation);
+        
+            if (!board.PlaceShip(ship))
+            {
+                Console.WriteLine("Can't place ship! Please, try again!");
+                isPlaced = false;
+            }
+            else
+            {
+                Console.WriteLine("Ship placed!");
+                isPlaced = true;
+                board.Print();
+            } 
+        } while (!isPlaced);
+        
+    }
 }
-board.PrintGrid();
 
-board.MakeMove();
+Console.WriteLine("Do you want to place your fleet randomly or by yourself? (r - random, y - yourself)");
+
+string answer = Console.ReadLine().Trim().ToLower();
+
+if (answer == "y")
+{
+    while (true)
+    {
+        SetupFleetInteractive();
+    }
+}
+
+if (answer == "r")
+{
+    List<Ship> fleet = new List<Ship>();
+    
+    board.PlaceFleetRandomly(fleet);
+    board.Print();
+}
+
+
+
 
 
 

@@ -3,7 +3,9 @@ namespace Battle_Ship;
 public class Board
 {
     private List<Ship> Ships = new List<Ship>();
-    char[,] grid = new char[10, 10];
+    public CellState[,] grid = new CellState[10, 10];
+    private int moveCounter = 0;
+    Random random = new Random();
 
     public Board()
     {
@@ -11,85 +13,215 @@ public class Board
         {
             for (int j = 0; j < grid.GetLength(1); j++)
             {
-                grid[i, j] = ' ';
+                grid[i, j] = CellState.Empty;
             }
         }
     }
-    
-    bool OcupiesCell(int row, int col)
+
+    public bool CanPlaceShip(Ship ship)
     {
-        if (grid[row, col] == 'S')
+        foreach (var cell in ship.Cells)
         {
-            return true;
+            if (cell.Row < 0 || cell.Row > 9 || cell.Col < 0 || cell.Col > 9)
+            {
+                return false;
+            }
+
+            if (!IsCellEmpty(cell))
+            {
+                return false;
+            }
+            
         }
-        return false;
+        return true;
+    }
+
+    public bool IsCellEmpty((int row, int col) cell)
+    {
+        foreach (var existingShip in Ships)
+        {
+            if (existingShip.IsCellAroundShip(cell))
+            {
+                return false;
+            }
+        }
+        
+        if (grid[cell.row, cell.col] != CellState.Empty)
+        {
+            return false;
+        }
+        
+        return true;
+    }
+
+    public void PlaceFleetRandomly(List<Ship> fleet)
+    {
+        AddRandomShip(1, fleet);
+        AddRandomShip(2, fleet);
+        AddRandomShip(3, fleet);
+        AddRandomShip(4, fleet);
+    }
+
+    private void AddRandomShip(int size, List<Ship> fleet)
+    {     
+        bool isAdded = false;
+        
+        for (int i = 0; i < 5 - size; i++)
+        {
+            
+            do
+            {
+                Ship? ship = PlaceShipRandomly(size);
+                if (ship != null)
+                {
+                    fleet.Add(ship);
+                    isAdded = true;
+                }
+                
+            } while (!isAdded);
+        }
+    }
+
+    private Ship? PlaceShipRandomly(int size)
+    {
+        
+        for (int i = 0; i < 100; i++)
+        {
+            int row = random.Next(10);
+            int col = random.Next(10);
+            bool horizontal = random.Next(2) == 0;
+            
+            Ship ship = new Ship(row, col, size, horizontal);
+            
+            if (PlaceShip(ship))
+            {
+                return ship;
+            }
+        }
+        return null;
     }
 
 
-    public void PlaceShipDirectly(Ship ship)
+    public bool PlaceShip(Ship ship)
     {
-        Ships.Add(ship);
-
-        foreach (var cell in ship.Cells)
+        if (CanPlaceShip(ship))
         {
-            grid[cell.Row, cell.Col] = 'S';
+            foreach (var cell in ship.Cells)
+            {
+                grid[cell.Row, cell.Col] = CellState.Ship;
+            }
+            
+            Ships.Add(ship);
+
+            return true;
         }
+        else
+        {
+            return false;
+        }
+    }
+
+    public bool IsAllShipsSunk()
+    {
+        foreach (var ship in Ships)
+        {
+            if (!ship.IsSunk())
+            {
+                return false;
+            }
+        }
+        return true;
     }
     
     public ShotResult ReceiveShot(int row, int col)
     {
-        if (OcupiesCell(row, col))
+        if (grid[row, col] == CellState.Hit)
         {
-            grid[row, col] = 'H';
-            Console.WriteLine("Попадание!");
-            return ShotResult.Hit;
-        }
-        else if (grid[row, col] == 'H')
-        {
-            Console.WriteLine("Клетка была отмеченна раннее");
             return ShotResult.AlreadyShot;
         }
-        else
+        
+        foreach (var ship in Ships)
         {
-            Console.WriteLine("Промах");
-            return ShotResult.Miss;
+            if (ship.OccupiesCell(row, col))
+            {
+                grid[row, col] = CellState.Hit;
+                ship.RegisterHit(row, col);
+                if (ship.IsSunk())
+                {
+                    foreach (var cell in ship.Cells)
+                    {
+                        grid[cell.Row, cell.Col] = CellState.Sunk;
+                    }
+                    return ShotResult.Sunk;
+                }
+                return ShotResult.Hit;
+            }
         }
+        grid[row, col] = CellState.Miss;
+        return ShotResult.Miss;
     }
 
-    private void MarkShot(int row, int col)
+    private char GetDisplaySymbol(CellState state, bool hideShips)
     {
-        grid[row, col] = 'X';
+        return state switch
+        {
+            CellState.Empty => '.',
+            CellState.Ship => hideShips ? '.' : 'S',
+            CellState.Hit => 'H',
+            CellState.Miss => 'M',
+            CellState.Sunk => 'X',
+            _ => '.'
+        };
     }
 
-    private void MarkMiss(int row, int col)
+    private void PrintResult(ShotResult result)
     {
-        grid[row, col] = 'O';
+        Console.Clear();
+
+        if (result == ShotResult.Miss)
+        {
+            Console.WriteLine("Miss");
+        }
+
+        if (result == ShotResult.AlreadyShot)
+        {
+            Console.WriteLine("You've already shot to that cell, please choose another one!");
+        }
+
+        if (result == ShotResult.Sunk)
+        {
+            Console.WriteLine("Congratulations! Ship sank");
+        }
+
+        if (result == ShotResult.Hit)
+        {
+            Console.WriteLine("Hit!");
+        }
+        
     }
 
     public void MakeMove()
     {
-        while (true)
+        while (!IsAllShipsSunk())
         {
-                var cell = Console.ReadLine().Split(' ');
-            
-            int row = int.Parse(cell[0]);
-            int col = int.Parse(cell[1]);
+            int row;
+            int col;
 
-            if (OcupiesCell(row, col))
+            if (!UserInputHelper.TryParseCoordinate(Console.ReadLine(), out row, out col))
             {
-                MarkShot(row, col);
-                PrintGrid();
+                Console.WriteLine("Invalid coordinate! Try again!");
+                continue;
             }
-            else
-            {
-                MarkMiss(row, col);
-                Console.WriteLine("мимо");
-                PrintGrid();
-            }
+            var shotResult = ReceiveShot(row, col);
+            PrintResult(shotResult);
+            moveCounter++;
+            Print();
+            
         }
+        Console.WriteLine($"Поздравляем, вы потопили весь флот! \nВы справились за {moveCounter} ходов.");
 }
     
-    public void PrintGrid()
+    public void Print()
     {
         int counter = 0;
 
@@ -121,7 +253,7 @@ public class Board
             Console.Write(" ");
             for (int j = 0; j < grid.GetLength(1); j++)
             {
-                Console.Write(grid[i, j]);
+                Console.Write(GetDisplaySymbol(grid[i, j], false));
                 Console.Write(" | ");
                 counter++;
 
