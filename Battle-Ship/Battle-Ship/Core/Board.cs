@@ -36,6 +36,25 @@ public class Board
         return true;
     }
 
+    public bool CanPlaceSizeShip(int size, Board board)
+    {
+        int counter = 0;
+        
+        foreach (Ship existingShip in board.Ships)
+        {
+            if (existingShip.Size == size)
+            {
+                counter++;
+            }
+        }
+
+        if (counter < 5 - size)
+        {
+            return true;
+        }
+        return false;
+    }
+
     public bool IsCellEmpty((int row, int col) cell)
     {
         foreach (var existingShip in Ships)
@@ -200,28 +219,40 @@ public class Board
         
     }
 
-    public void MakeMove()
+    public void MakeMove(Player player, Board otherBoard)
     {
-        while (!IsAllShipsSunk())
+        bool isHit = false;
+        
+        if (!IsAllShipsSunk())
         {
-            int row;
-            int col;
-
-            if (!UserInputHelper.TryParseCoordinate(Console.ReadLine(), out row, out col))
+            do
             {
-                Console.WriteLine("Invalid coordinate! Try again!");
-                continue;
-            }
-            var shotResult = ReceiveShot(row, col);
-            PrintResult(shotResult);
-            moveCounter++;
-            Print();
-            
+                (int row, int col) cell = player.GetShot();
+                var result = otherBoard.ReceiveShot(cell.row, cell.col);
+
+                if (result == ShotResult.Hit)
+                {
+                    isHit = true;
+                    Console.WriteLine("You've hit the ship!");
+                }
+
+                if (result == ShotResult.Sunk)
+                {
+                    isHit = true;
+                    Console.WriteLine("You've sunk the ship!");
+                }
+
+                moveCounter++;
+            } while (isHit);
         }
-        Console.WriteLine($"Поздравляем, вы потопили весь флот! \nВы справились за {moveCounter} ходов.");
+        else
+        {
+            Console.WriteLine($"Поздравляем, вы потопили весь флот! \nВы справились за {moveCounter} ходов.");    
+        }
+        
 }
     
-    public void Print()
+    public void Print(bool hideShips)
     {
         int counter = 0;
 
@@ -253,7 +284,7 @@ public class Board
             Console.Write(" ");
             for (int j = 0; j < grid.GetLength(1); j++)
             {
-                Console.Write(GetDisplaySymbol(grid[i, j], false));
+                Console.Write(GetDisplaySymbol(grid[i, j], hideShips));
                 Console.Write(" | ");
                 counter++;
 

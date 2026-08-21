@@ -2,55 +2,56 @@ namespace Battle_Ship;
 
 public static class UserInputHelper
 {
-    public static bool TryParseCoordinate(
-        string? input,
-        out int row,
-        out int col)
+    public static (int, int) InputCoordinate()
     {
-        row = -1;
-        col = -1;
+        int row = -1;
+        int col = -1;
+        bool isParsed = false;
 
-        if (string.IsNullOrEmpty(input))
+        do
         {
-            return false;
-        }
+            Console.Write("Please enter coordinate:");
+            string input = Console.ReadLine().Trim();
+            
+            if (string.IsNullOrEmpty(input))
+            {
+                Console.WriteLine("Your input cannot be empty!");
+                continue;
+            }
 
-        char letter = char.ToUpper(input[0]);
+            char letter = char.ToUpper(input[0]);
 
-        if (!LetterDictionary.ParsingLetters.ContainsKey(letter))
-        {
-            return false;
-        }
+            if (!LetterDictionary.ParsingLetters.ContainsKey(letter))
+            {
+                Console.WriteLine("Invalid coordinate! Try again!");
+                continue;
+            }
 
-        if (!int.TryParse(input.Substring(1), out int number))
-        {
-            return false;
-        }
+            if (!int.TryParse(input.Substring(1), out int number))
+            {
+                Console.WriteLine("Invalid coordinate! Try again!");
+                continue;
+            }
 
-        if (number < 1 || number > 10)
-        {
-            return false;
-        }
-
-        row = LetterDictionary.ParsingLetters[letter];
-        col = number - 1;
-
-        return true;
+            if (number < 1 || number > 10)
+            {
+                Console.WriteLine("The number must be between 1 and 10!");
+                continue;
+            }
+            
+            isParsed = true;
+            row = LetterDictionary.ParsingLetters[letter];
+            col = number - 1;
+        } while (!isParsed);
+        
+        return (row, col);
     }
     
     public static (int, int) GetRowAndCol()
     {
         Console.Write("Please enter start row and column for a ship:");
 
-        int row;
-        int col;
-
-        while (!TryParseCoordinate(Console.ReadLine(), out row, out col))
-        {
-            Console.WriteLine("Invalid coordinate! Try again!");
-        }
-
-        return (row, col);
+        return InputCoordinate();
     }
     
     public static int GetSize()
@@ -85,5 +86,7 @@ public static class UserInputHelper
             Console.WriteLine("Unknown direction");
         }
     }
+    
+    
 
 }

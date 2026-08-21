@@ -2,7 +2,7 @@ namespace Battle_Ship;
 
 public class Ship
 {
-    int Size { get; set; }
+    public int Size { get; init; }
     public List<(int Row, int Col)> Cells { get; set; }
     private List<(int, int)> HitCells  { get; set; }
     private List<(int, int)> CellsAroundShip { get; set; }
