@@ -45,7 +45,7 @@ public class Game
 
             if (enemyBoard.IsAllShipsSunk())
             {
-                Console.WriteLine("You won!");
+                Console.WriteLine($"You won! You've had {player.moveCounter} moves!");
                 isWon = true;
                 return;
             }
