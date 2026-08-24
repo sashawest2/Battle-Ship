@@ -199,29 +199,9 @@ public class Board
         }
         
     }
-
-    public void MakeMove()
-    {
-        while (!IsAllShipsSunk())
-        {
-            int row;
-            int col;
-
-            if (!UserInputHelper.TryParseCoordinate(Console.ReadLine(), out row, out col))
-            {
-                Console.WriteLine("Invalid coordinate! Try again!");
-                continue;
-            }
-            var shotResult = ReceiveShot(row, col);
-            PrintResult(shotResult);
-            moveCounter++;
-            Print();
-            
-        }
-        Console.WriteLine($"Поздравляем, вы потопили весь флот! \nВы справились за {moveCounter} ходов.");
-}
     
-    public void Print()
+    
+    public void Print(bool hideShips)
     {
         int counter = 0;
 
@@ -253,7 +233,7 @@ public class Board
             Console.Write(" ");
             for (int j = 0; j < grid.GetLength(1); j++)
             {
-                Console.Write(GetDisplaySymbol(grid[i, j], false));
+                Console.Write(GetDisplaySymbol(grid[i, j], hideShips));
                 Console.Write(" | ");
                 counter++;
 
