@@ -2,55 +2,56 @@ namespace Battle_Ship;
 
 public static class UserInputHelper
 {
-    public static bool TryParseCoordinate(
-        string? input,
-        out int row,
-        out int col)
+    public static (int, int) ParseCoordinate()
     {
-        row = -1;
-        col = -1;
-
-        if (string.IsNullOrEmpty(input))
+        do
         {
-            return false;
-        }
+            int row = -1;
+            int col = -1;
 
-        char letter = char.ToUpper(input[0]);
+            Console.Write("Please enter row and column for a ship:");
+            string input = Console.ReadLine();
 
-        if (!LetterDictionary.ParsingLetters.ContainsKey(letter))
-        {
-            return false;
-        }
+            if (string.IsNullOrEmpty(input))
+            {
+                Console.WriteLine("Coordinates cannot be empty!");
+                continue;
+            }
 
-        if (!int.TryParse(input.Substring(1), out int number))
-        {
-            return false;
-        }
+            char letter = char.ToUpper(input[0]);
 
-        if (number < 1 || number > 10)
-        {
-            return false;
-        }
+            if (!LetterDictionary.ParsingLetters.ContainsKey(letter))
+            {
+                Console.WriteLine("Coordinates should contain a letter!");
+                continue;
+            }
 
-        row = LetterDictionary.ParsingLetters[letter];
-        col = number - 1;
+            if (!int.TryParse(input.Substring(1), out int number))
+            {
+                Console.WriteLine("Coordinates should contain a number!");
+                continue;
+            }
 
-        return true;
+            if (number < 1 || number > 10)
+            {
+                Console.WriteLine("Coordinates should contain number between 1 and 10!");
+                continue;
+            }
+
+            row = LetterDictionary.ParsingLetters[letter];
+            col = number - 1;
+
+            return (row, col);
+        } while (true);
     }
     
     public static (int, int) GetRowAndCol()
     {
         Console.Write("Please enter start row and column for a ship:");
 
-        int row;
-        int col;
+        var cell = ParseCoordinate();
 
-        while (!TryParseCoordinate(Console.ReadLine(), out row, out col))
-        {
-            Console.WriteLine("Invalid coordinate! Try again!");
-        }
-
-        return (row, col);
+        return (cell.Item1, cell.Item2);
     }
     
     public static int GetSize()
