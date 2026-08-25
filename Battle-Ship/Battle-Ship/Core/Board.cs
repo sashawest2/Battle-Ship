@@ -135,7 +135,7 @@ public class Board
     
     public ShotResult ReceiveShot(int row, int col)
     {
-        if (grid[row, col] == CellState.Hit)
+        if (grid[row, col] == CellState.Hit || grid[row, col] == CellState.Sunk)
         {
             return ShotResult.AlreadyShot;
         }
