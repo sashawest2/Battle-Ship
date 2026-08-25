@@ -2,14 +2,59 @@ namespace Battle_Ship;
 
 public class Game
 {
-    private bool isWon = false;
+    private readonly bool _isWon = false;
 
     public void Play()
     {
+        var board1 = new Board();
+        var board2 = new Board();
+
         Player player1 = new HumanPlayer();
+        SetupShips(board1);
+        var player2 = CreateSecondPlayer(board2);
+        SetupShipsSecondPlayer(player2, board2);
+
+        do
+        {
+           player1.MakeMove(board1, board2);
+           player2.MakeMove(board2, board1);
+
+        } while (!_isWon);
+
+    }
+
+    private void SetupShips(Board board)
+    {
+        SetShipsHelper.SetShips(board);
+        Console.WriteLine("Press any key to pass the run");
+        Console.ReadLine();
+        Console.Clear();
+    }
+    
+    private void SetupComputerShips(Board board)
+    {
+        List<Ship> fleet = new List<Ship>();
+        board.PlaceFleetRandomly(fleet);
+    }
+    
+    private void SetupShipsSecondPlayer(Player player, Board board)
+    {
+        if (player is HumanPlayer)
+        {
+            SetupShips(board);
+        }
+
+        if (player is ComputerPlayer)
+        {
+            SetupComputerShips(board);
+        }
+    }
+    
+    private Player CreateSecondPlayer(Board board)
+    {
         Player? player2 = null;
 
-        bool isPlayerCreated = false;
+        var isPlayerCreated = false;
         do
         {
             Console.WriteLine("Who do you want to play with? (c - computer, p - another person)");
@@ -25,44 +70,12 @@ public class Game
                 isPlayerCreated = true;
             }
         } while (!isPlayerCreated);
-
-
-        Board board1 = new Board();
-        Board board2 = new Board();
-
-        SetupShips(board1);
-        if (player2 is HumanPlayer)
-        {
-            SetupShips(board2);
-        }
-
-        if (player2 is ComputerPlayer)
-        {
-            SetupComputerShips(board2);
-        }
-
-        do
-        {
-            MakeMoveHelper.MakeMove(player1, board1, board2);
-            MakeMoveHelper.MakeMove(player2, board2, board1);
-
-        } while (!isWon);
-
-    }
-
-    private void SetupShips(Board board)
-    {
-        SetShipsHelper.SetShips(board);
-        Console.WriteLine("Press any key to pass the run");
-        Console.ReadLine();
-        Console.Clear();
-    }
-
-    private void SetupComputerShips(Board board)
-    {
-        List<Ship> fleet = new List<Ship>();
-        board.PlaceFleetRandomly(fleet);
+        
+        
+        return player2;
     }
 }
+
+
 
    

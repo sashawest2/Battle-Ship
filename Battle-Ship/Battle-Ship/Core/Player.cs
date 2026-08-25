@@ -4,45 +4,41 @@ public abstract class Player
 {
     private string Name{get;init;}
     private Board OwnBoard{get;init;}
-    public int moveCounter = 0;
+    public int _moveCounter = 0;
+    private Random _rnd = new Random();
+    public static bool _isWon = false;
+    public static bool _isShot = false;
 
     public virtual (int row, int col) GetShot()
-    {
-       Random rnd = new Random();
-       moveCounter++;
-       return (rnd.Next(10), rnd.Next(10)); 
+    { 
+       _rnd = new Random();
+       _moveCounter++;
+       return (_rnd.Next(10), _rnd.Next(10)); 
     }
-}
 
-public class HumanPlayer : Player
-{
-    public override (int row, int col) GetShot()
+    public virtual void MakeMove(Board playerBoard, Board enemyBoard)
     {
-        (int row, int col) = UserInputHelper.ParseCoordinate();
-        moveCounter++;
-        return (row, col);
-    }
-}
-
-public class ComputerPlayer : Player
-{
-    private readonly HashSet<(int, int)> _usedCoordinates = new HashSet<(int, int)>();
-    private bool _isNew = false;
-    
-    public override (int row, int col) GetShot()
-    {
-        Random rnd = new Random();
-        (int row, int col) cell;
-
         do
         {
-            cell = (rnd.Next(10), rnd.Next(10));
+            var cell = GetShot();
+            ShotResult result = enemyBoard.ReceiveShot(cell.row, cell.col);
 
-            _isNew = !_usedCoordinates.Contains(cell);
-        } while (!_isNew);
-        
-        _usedCoordinates.Add(cell);
+            if (enemyBoard.IsAllShipsSunk())
+            {
+                _isWon = true;
+                return;
+            }
 
-        return cell;
+            if (result is ShotResult.Hit or ShotResult.Sunk)
+            {
+                _isShot = true;
+            }
+            else
+            {
+                _isShot = false;
+            }
+    
+        } while (_isShot); 
     }
 }
+
