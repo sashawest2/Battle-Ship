@@ -2,24 +2,25 @@ namespace Battle_Ship;
 
 public class Game
 {
-    private bool isWon = false;
+    private readonly bool _isWon = false;
+
     public void Play()
     {
+        var board1 = new Board();
+        var board2 = new Board();
+
         Player player1 = new HumanPlayer();
-        Player player2 = new HumanPlayer();
-        
-        Board board1 = new Board();
-        Board board2 = new Board();
-        
         SetupShips(board1);
-        SetupShips(board2);
+        var player2 = CreateSecondPlayer(board2);
+        SetupShipsSecondPlayer(player2, board2);
 
         do
         {
-            MakeMove(player1, board1, board2);
-            MakeMove(player2, board2, board1);
-        } while (!isWon);
-        
+           player1.MakeMove(board1, board2);
+           player2.MakeMove(board2, board1);
+
+        } while (!_isWon);
+
     }
 
     private void SetupShips(Board board)
@@ -30,44 +31,51 @@ public class Game
         Console.Clear();
     }
     
-    private void MakeMove(Player player, Board myBoard, Board enemyBoard)
+    private void SetupComputerShips(Board board)
     {
-        bool isShot = false;
-        
-        myBoard.Print(false);
-        Console.WriteLine();
-        enemyBoard.Print(true);
-        
+        List<Ship> fleet = new List<Ship>();
+        board.PlaceFleetRandomly(fleet);
+    }
+    
+    private void SetupShipsSecondPlayer(Player player, Board board)
+    {
+        if (player is HumanPlayer)
+        {
+            SetupShips(board);
+        }
+
+        if (player is ComputerPlayer)
+        {
+            SetupComputerShips(board);
+        }
+    }
+    
+    private Player CreateSecondPlayer(Board board)
+    {
+        Player? player2 = null;
+
+        var isPlayerCreated = false;
         do
         {
-            var cell = player.GetShot();
-            ShotResult result = enemyBoard.ReceiveShot(cell.row, cell.col);
-
-            if (enemyBoard.IsAllShipsSunk())
+            Console.WriteLine("Who do you want to play with? (c - computer, p - another person)");
+            var answer = Console.ReadLine().Trim().ToLower();
+            if (answer == "c")
             {
-                Console.WriteLine($"You won! You've had {player.moveCounter} moves!");
-                isWon = true;
-                return;
+                player2 = new ComputerPlayer();
+                isPlayerCreated = true;
             }
-
-            if (result is ShotResult.Hit or ShotResult.Sunk)
+            else if (answer == "p")
             {
-                Console.Clear();
-                enemyBoard.Print(true);
-                Console.WriteLine("Nice shot! You have another attempt!");
-                isShot = true;
+                player2 = new HumanPlayer();
+                isPlayerCreated = true;
             }
-            else
-            {
-                isShot = false;
-            }
-    
-        } while (isShot); 
+        } while (!isPlayerCreated);
         
-        Console.Clear();
-        enemyBoard.Print(true);
-        Console.WriteLine("Press any key to pass the run");
-        Console.ReadLine();
-        Console.Clear();
+        
+        return player2;
     }
 }
+
+
+
+   
