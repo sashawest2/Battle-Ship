@@ -47,5 +47,16 @@ public class ComputerPlayer : Player
             }
     
         } while (_isShot); 
+        
+        PrintBoardAfterMove(enemyBoard);
+    }
+    
+    private static void PrintBoardAfterMove(Board enemyBoard)
+    {
+        Console.Clear();
+        enemyBoard.Print(true);
+        Console.WriteLine("Press any key to pass the run");
+        Console.ReadLine();
+        Console.Clear();
     }
 }

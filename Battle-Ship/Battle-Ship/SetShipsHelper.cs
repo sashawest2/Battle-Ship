@@ -3,28 +3,35 @@ namespace Battle_Ship;
 public static class SetShipsHelper
 {
     private static bool isPlaced = false;
+    private static bool isSet = false;
     
     public static void SetShips(Board board)
     {
-        Console.WriteLine("Do you want to place your fleet randomly or by yourself? (r - random, y - yourself)");
 
-        string answer = Console.ReadLine().Trim().ToLower();
-
-        if (answer == "y")
+        do
         {
-            while (true)
+            Console.WriteLine("Do you want to place your fleet randomly or by yourself? (r - random, y - yourself)");
+
+            string answer = Console.ReadLine().Trim().ToLower();
+            
+            if (answer == "y")
             {
-                SetupFleetInteractive(board);
+                while (true)
+                {
+                    SetupFleetInteractive(board);
+                    isSet = true;
+                }
             }
-        }
 
-        if (answer == "r")
-        {
-            List<Ship> fleet = new List<Ship>();
+            if (answer == "r")
+            {
+                List<Ship> fleet = new List<Ship>();
     
-            board.PlaceFleetRandomly(fleet);
-            board.Print(false);
-        }
+                board.PlaceFleetRandomly(fleet);
+                board.Print(false);
+                isSet = true;
+            }
+        } while (!isSet);
 
     }
 
