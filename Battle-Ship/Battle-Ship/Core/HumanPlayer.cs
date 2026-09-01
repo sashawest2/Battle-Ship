@@ -3,10 +3,10 @@ namespace Battle_Ship;
 
     public class HumanPlayer : Player
     {
-        public override (int row, int col) GetShot()
+        private (int row, int col) GetShot()
         {
             (int row, int col) = UserInputHelper.ParseCoordinate();
-            _moveCounter++;
+            MoveCounter++;
             return (row, col);
         }
 
@@ -22,7 +22,7 @@ namespace Battle_Ship;
                 if (enemyBoard.IsAllShipsSunk())
                 {
                  
-                    Console.WriteLine($"You won! You've had {_moveCounter} moves!");
+                    Console.WriteLine($"You won! You've had {MoveCounter} moves!");
                     _isWon = true;
                     return;
                 }

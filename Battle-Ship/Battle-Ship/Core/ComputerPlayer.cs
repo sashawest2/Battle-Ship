@@ -9,21 +9,12 @@ public class ComputerPlayer : Player
     private (int row, int col)? _previousCell;
     private bool _isNew;
     private int _hitCounter;
-    private bool _isHorizontal;
-    
-    public override (int row, int col) GetShot()
-    {
-        Random rnd = new Random();
-        (int row, int col) cell;
 
+    private (int row, int col) GetShot()
+    {
         if (_targetQueue.Count == 0)
         {
-            do
-            {
-                cell = (rnd.Next(10), rnd.Next(10));
-
-                _isNew = !_usedCoordinates.Contains(cell);
-            } while (!_isNew);
+            PickRandomCoordinate(out var cell);
         
             _usedCoordinates.Add(cell);
 
@@ -36,9 +27,23 @@ public class ComputerPlayer : Player
 
     }
 
+    private (int row, int col) PickRandomCoordinate(out ( int row, int col) cell)
+    {
+            do
+            {
+                cell = (Rnd.Next(10), Rnd.Next(10));
+
+                _isNew = !_usedCoordinates.Contains(cell);
+            } while (!_isNew);
+            
+            return (cell.row, cell.col);
+    }
+    
+
     public override void MakeMove(Board playerBoard, Board enemyBoard)
     {
         Thread.Sleep(500);
+        bool isHorizontal = false;
         
         do
         {
@@ -55,32 +60,25 @@ public class ComputerPlayer : Player
             {
                 _isShot = true;
                 _hitCounter++;
+                _hitCells.Add(cell);
 
                 if (_hitCounter == 1)
                 {
                     AddCellsToQueue(cell);
                     _previousCell = cell;
                 }
-
-                if (_hitCounter == 2 && _previousCell != null)
+                else
                 {
-                    if (_previousCell.Value.row == cell.row)
+                    if (_hitCounter == 2 && _previousCell != null)
                     {
-                        _isHorizontal = true;
-                    }
-                    else
-                    {
-                        _isHorizontal = false;
-                    }
-                    AddDirectionalCellToQueue(cell, _previousCell.Value, _isHorizontal);
+                        GetShipDirection(cell, out isHorizontal);
+                    } 
+                    AddCellsAtShipEndsToQueue(isHorizontal);
                 }
-
-                _hitCells.Add(cell);
-                
-                if (_hitCounter == 3)
-                {
-                  AddCellsAtShipEndsToQueue();
-                }
+                // AddDirectionalCellToQueue(cell, _previousCell.Value, isHorizontal);
+                // if (_hitCounter == 3)
+                // {
+                // }
             }
 
             else if (result is ShotResult.Sunk)
@@ -103,11 +101,16 @@ public class ComputerPlayer : Player
         PrintBoardAfterMove(enemyBoard);
     }
 
-    private void AddCellsAtShipEndsToQueue()
+    private bool GetShipDirection((int row, int col) cell, out bool isHorizontal)
+    {
+           return isHorizontal = _previousCell.Value.row == cell.row;
+    }
+
+    private void AddCellsAtShipEndsToQueue(bool isHorizontal)
     {
         _targetQueue.Clear();
                     
-        if (_isHorizontal)
+        if (isHorizontal)
         {
             var min = _hitCells.MinBy(x => x.col);
             var max = _hitCells.MaxBy(x => x.col);
