@@ -3,11 +3,11 @@ namespace Battle_Ship;
 
     public class HumanPlayer : Player
     {
-        private (int row, int col) GetShot()
+        private Cell GetShot()
         {
-            (int row, int col) = UserInputHelper.ParseCoordinate();
+            Cell cell = UserInputHelper.ParseCoordinate();
             MoveCounter++;
-            return (row, col);
+            return cell;
         }
 
         public override void MakeMove(Board playerBoard, Board enemyBoard)
@@ -17,7 +17,7 @@ namespace Battle_Ship;
             do
             {
                 var cell = GetShot();
-                var (result, ship) = enemyBoard.ReceiveShot(cell.row, cell.col);
+                var (result, ship) = enemyBoard.ReceiveShot(cell);
 
                 if (enemyBoard.IsAllShipsSunk())
                 {

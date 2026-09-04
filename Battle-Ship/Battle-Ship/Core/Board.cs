@@ -36,7 +36,7 @@ public class Board
         return true;
     }
 
-    public bool IsCellEmpty((int row, int col) cell)
+    public bool IsCellEmpty(Cell cell)
     {
         foreach (var existingShip in Ships)
         {
@@ -46,7 +46,7 @@ public class Board
             }
         }
         
-        if (grid[cell.row, cell.col] != CellState.Empty)
+        if (grid[cell.Row, cell.Col] != CellState.Empty)
         {
             return false;
         }
@@ -87,11 +87,10 @@ public class Board
         
         for (int i = 0; i < 100; i++)
         {
-            int row = random.Next(10);
-            int col = random.Next(10);
+            Cell cell = new(random.Next(10), random.Next(10));
             bool horizontal = random.Next(2) == 0;
             
-            Ship ship = new Ship(row, col, size, horizontal);
+            Ship ship = new Ship(cell, size, horizontal);
             
             if (PlaceShip(ship))
             {
@@ -133,22 +132,22 @@ public class Board
         return true;
     }
     
-    public (ShotResult res, Ship? ship) ReceiveShot(int row, int col)
+    public (ShotResult res, Ship? ship) ReceiveShot(Cell cell)
     {
-        if (grid[row, col] == CellState.Hit || grid[row, col] == CellState.Sunk)
+        if (grid[cell.Row, cell.Col] == CellState.Hit || grid[cell.Row, cell.Col] == CellState.Sunk)
         {
             return (ShotResult.AlreadyShot, ship:null);
         }
         
         foreach (var ship in Ships)
         {
-            if (ship.OccupiesCell(row, col))
+            if (ship.OccupiesCell(cell))
             {
-                grid[row, col] = CellState.Hit;
-                ship.RegisterHit(row, col);
+                grid[cell.Row, cell.Col] = CellState.Hit;
+                ship.RegisterHit(cell);
                 if (ship.IsSunk())
                 {
-                    foreach (var cell in ship.Cells)
+                    foreach (var shipCell in ship.Cells)
                     {
                         grid[cell.Row, cell.Col] = CellState.Sunk;
                         
@@ -158,7 +157,7 @@ public class Board
                 return (ShotResult.Hit, null);
             }
         }
-        grid[row, col] = CellState.Miss;
+        grid[cell.Row, cell.Col] = CellState.Miss;
         return (ShotResult.Miss, null);
     }
 

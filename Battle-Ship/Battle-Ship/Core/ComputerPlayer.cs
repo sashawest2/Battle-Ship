@@ -2,15 +2,16 @@ namespace Battle_Ship;
 
 public class ComputerPlayer : Player
 {
-    private readonly HashSet<(int, int)> _usedCoordinates = new HashSet<(int, int)>();
-    private readonly Queue<(int, int)> _targetQueue = new Queue<(int, int)>();
-    private readonly Queue<(int, int)> _cellsToAvoid = new Queue<(int, int)>();
-    private readonly HashSet<(int row, int col)> _hitCells = new HashSet<(int, int)>();
-    private (int row, int col)? _previousCell;
+    private readonly HashSet<Cell> _cellsAroundShip = new();
+    private readonly Queue<Cell> _targetQueue = new();
+    private readonly Queue<Cell> _cellsToAvoid = new();
+    private readonly HashSet<Cell> _hitCells = new();
+    private readonly HashSet<Cell> _usedCoordinates = new();
+    private Cell? _previousCell;
     private bool _isNew;
     private int _hitCounter;
 
-    private (int row, int col) GetShot()
+    private Cell GetShot()
     {
         if (_targetQueue.Count == 0)
         {
@@ -24,19 +25,16 @@ public class ComputerPlayer : Player
         var targetCell = _targetQueue.Dequeue();
         _usedCoordinates.Add(targetCell);
         return targetCell;
-
     }
 
-    private (int row, int col) PickRandomCoordinate(out ( int row, int col) cell)
+    private void PickRandomCoordinate(out Cell cell)
     {
             do
             {
-                cell = (Rnd.Next(10), Rnd.Next(10));
+                cell = new Cell(Rnd.Next(10), Rnd.Next(10));
 
                 _isNew = !_usedCoordinates.Contains(cell) && !_cellsToAvoid.Contains(cell);
             } while (!_isNew);
-            
-            return (cell.row, cell.col);
     }
     
 
@@ -47,8 +45,8 @@ public class ComputerPlayer : Player
         
         do
         {
-            var cell = GetShot();
-            var (result, ship) = enemyBoard.ReceiveShot(cell.row, cell.col);
+            Cell cell = GetShot();
+            var (result, ship) = enemyBoard.ReceiveShot(cell);
             
             if (enemyBoard.IsAllShipsSunk())
             {
@@ -84,7 +82,10 @@ public class ComputerPlayer : Player
                 _previousCell = null;
                 _targetQueue.Clear();
                 _isShot = true;
-                foreach (var cellToAvoid in ship.CellsAroundShip)
+                
+                List<Cell> cellsToAvoid = ship.GetCopyOfCellsAroundShip();
+                
+                foreach (var cellToAvoid in cellsToAvoid)
                 {
                     _cellsToAvoid.Enqueue(cellToAvoid);
                 }
@@ -101,9 +102,9 @@ public class ComputerPlayer : Player
         PrintBoardAfterMove(enemyBoard);
     }
 
-    private bool GetShipDirection((int row, int col) cell, out bool isHorizontal)
+    private bool GetShipDirection(Cell cell, out bool isHorizontal)
     {
-           return isHorizontal = _previousCell.Value.row == cell.row;
+           return isHorizontal = _previousCell.Value.Row == cell.Row;
     }
 
     private void AddCellsAtShipEndsToQueue(bool isHorizontal)
@@ -112,32 +113,32 @@ public class ComputerPlayer : Player
                     
         if (isHorizontal)
         {
-            var min = _hitCells.MinBy(x => x.col);
-            var max = _hitCells.MaxBy(x => x.col);
+            var min = _hitCells.MinBy(x => x.Col);
+            var max = _hitCells.MaxBy(x => x.Col);
 
-            if (min.col > 0)
+            if (min.Col > 0)
             {
-                _targetQueue.Enqueue((min.row, min.col - 1));
+                _targetQueue.Enqueue(min with { Col = min.Col - 1 });
             }
 
-            if (max.col < 9)
+            if (max.Col < 9)
             {
-                _targetQueue.Enqueue((max.row, max.col + 1));
+                _targetQueue.Enqueue(max with { Col = max.Col + 1 });
             }
         }
         else
         {
-            var min = _hitCells.MinBy(x => x.row);
-            var max = _hitCells.MaxBy(x => x.row);
+            var min = _hitCells.MinBy(x => x.Row);
+            var max = _hitCells.MaxBy(x => x.Row);
 
-            if (min.row > 0)
+            if (min.Row > 0)
             {
-                _targetQueue.Enqueue((min.row - 1, min.col));
+                _targetQueue.Enqueue(min with { Row = min.Row - 1 });
             }
 
-            if (max.row < 9)
+            if (max.Row < 9)
             {
-                _targetQueue.Enqueue((max.row + 1, max.col));
+                _targetQueue.Enqueue(max with { Row = max.Row + 1 });
             }
             
         }
@@ -151,97 +152,92 @@ public class ComputerPlayer : Player
         Console.Clear();
     }
 
-    private void AddCellsToQueue((int row, int col) cell)
+    private void AddCellsToQueue(Cell cell)
     {
-        if (cell.row != 0)
+        if (cell.Row != 0)
         {
-            _targetQueue.Enqueue((cell.row - 1, cell.col));
+            _targetQueue.Enqueue(cell with { Row = cell.Row - 1 });
         }
 
-        if (cell.col != 0)
+        if (cell.Col != 0)
         {
-            _targetQueue.Enqueue((cell.row, cell.col - 1));
+            _targetQueue.Enqueue(cell with { Col = cell.Col - 1 });
         }
 
-        if (cell.row != 9)
+        if (cell.Row != 9)
         {
-            _targetQueue.Enqueue((cell.row + 1, cell.col));
+            _targetQueue.Enqueue(cell with {Row = cell.Row + 1});
         }
 
-        if (cell.col != 9)
+        if (cell.Col != 9)
         {
-            _targetQueue.Enqueue((cell.row, cell.col + 1));
+            _targetQueue.Enqueue(cell with {Col = cell.Col + 1});
         }
     }
 
-    private void AddDirectionalCellToQueue((int row, int col) cell, (int row, int col) previousCell, bool isHorizontal)
+    private void AddDirectionalCellToQueue(Cell cell, Cell previousCell, bool isHorizontal)
     {
         _targetQueue.Clear();
 
         if (isHorizontal)
         {
-            if (previousCell.col != 0 && cell.col != 0)
+            if (previousCell.Col != 0 && cell.Col != 0)
             {
-                if (previousCell.col < cell.col)
+                if (previousCell.Col < cell.Col)
                 {
-                    (int row, int col) horizontalCell = (previousCell.row, previousCell.col - 1);
+                    Cell horizontalCell = previousCell with { Col = previousCell.Col - 1 };
                     _targetQueue.Enqueue(horizontalCell);
                 }
                 else
                 {
-                    (int row, int col) horizontalCell = (cell.row, cell.col - 1);
+                    var horizontalCell = cell with { Col = cell.Col - 1 };
                     _targetQueue.Enqueue(horizontalCell);
                 }
             }
 
-            if (previousCell.col != 9 && cell.col != 9)
+            if (previousCell.Col != 9 && cell.Col != 9)
             {
-                if (previousCell.col > cell.col)
+                if (previousCell.Col > cell.Col)
                 {
-                    (int row, int col) horizontalCell = (previousCell.row, previousCell.col + 1);
+                    var horizontalCell = previousCell with { Col = previousCell.Col + 1 };
                     _targetQueue.Enqueue(horizontalCell);
                 }
                 else
                 {
-                    (int row, int col) horizontalCell = (cell.row, cell.col + 1);
+                    var horizontalCell = cell with { Col = cell.Col + 1 };
                     _targetQueue.Enqueue(horizontalCell);
                 }
             }
         }
         else
         {
-            if (previousCell.row != 0 && cell.row != 0)
+            if (previousCell.Row != 0 && cell.Row != 0)
             {
-                if (previousCell.row < cell.row)
+                if (previousCell.Row < cell.Row)
                 {
-                    (int row, int col) verticalCell = (previousCell.row - 1, previousCell.col);
+                    var verticalCell = previousCell with { Row = previousCell.Row - 1 };
                     _targetQueue.Enqueue(verticalCell);
                 }
                 else
                 {
-                    (int row, int col) verticalCell = (cell.row - 1, cell.col);
+                    var verticalCell = cell with { Row = cell.Row - 1 };
                     _targetQueue.Enqueue(verticalCell);
                 }
             }
 
-            if (previousCell.row != 9 && cell.row != 9)
+            if (previousCell.Row != 9 && cell.Row != 9)
             {
-                if (previousCell.row > cell.row)
+                if (previousCell.Row > cell.Row)
                 {
-                    (int row, int col) verticalCell = (previousCell.row + 1, previousCell.col);
+                    var verticalCell = previousCell with { Row = previousCell.Row + 1 };
                     _targetQueue.Enqueue(verticalCell);
                 }
                 else
                 {
-                    (int row, int col) verticalCell = (cell.row + 1, cell.col);
+                    Cell verticalCell = cell with { Row = cell.Row + 1 };
                     _targetQueue.Enqueue(verticalCell);
                 }
             }
         }
-    }
-
-    public static void AddCellsToAvoid()
-    {
-        
     }
 }

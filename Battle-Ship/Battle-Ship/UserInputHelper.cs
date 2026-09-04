@@ -2,7 +2,7 @@ namespace Battle_Ship;
 
 public static class UserInputHelper
 {
-    public static (int, int) ParseCoordinate()
+    public static Cell ParseCoordinate()
     {
         do
         {
@@ -38,20 +38,19 @@ public static class UserInputHelper
                 continue;
             }
 
-            row = LetterDictionary.ParsingLetters[letter];
-            col = number - 1;
+            Cell cell = new(LetterDictionary.ParsingLetters[letter], number - 1);
 
-            return (row, col);
+            return cell;
         } while (true);
     }
     
-    public static (int, int) GetRowAndCol()
+    public static Cell GetRowAndCol()
     {
         Console.Write("Please enter start row and column for a ship:");
 
         var cell = ParseCoordinate();
 
-        return (cell.Item1, cell.Item2);
+        return cell;
     }
     
     public static int GetSize()

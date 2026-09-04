@@ -3,35 +3,40 @@ namespace Battle_Ship;
 public class Ship
 {
     int Size { get; set; }
-    public List<(int Row, int Col)> Cells { get; set; }
-    private List<(int, int)> HitCells  { get; set; }
-    public List<(int, int)> CellsAroundShip { get; set; }
+    public List<Cell> Cells { get; set; }
+    private List<Cell> HitCells  { get; set; }
+    private List<Cell> CellsAroundShip { get; set; }
 
-    private void AddCellAroundShip(int row, int col)
+    private void AddCellAroundShip(Cell cell)
     {
-        if (row >= 0 && row < 10 && col >= 0 && col < 10)
+        if (cell.Row >= 0 && cell.Row < 10 && cell.Col >= 0 && cell.Col < 10)
         {
-            CellsAroundShip.Add((row, col));
+            CellsAroundShip.Add(cell);
         }
     }
 
-    public Ship(int startRow, int startCol, int size, bool horizontal)
+    public List<Cell> GetCopyOfCellsAroundShip()
+    {
+        return CellsAroundShip.ToList();
+    }
+    
+    public Ship(Cell startCell, int size, bool horizontal)
     {
         Size = size;
-        Cells = new List<(int Row, int Col)>();
-        HitCells = new List<(int Row, int Col)>();
-        CellsAroundShip = new List<(int, int)>();
-        SetCellsAroundShip(startRow, startCol, size, horizontal);
+        Cells = new List<Cell>();
+        HitCells = new List<Cell>();
+        CellsAroundShip = new List<Cell>();
+        SetCellsAroundShip(startCell, size, horizontal);
 
         for (int i = 0; i < size; i++)
         {
             if (horizontal)
             {
-                Cells.Add((startRow,  startCol + i));
+                Cells.Add(startCell with { Col = startCell.Col + i });
             }
             else
             {
-               Cells.Add((startRow + i, startCol));
+               CellsAroundShip.Add(startCell with { Row = startCell.Row  + i });
             }
         }
         
@@ -39,28 +44,28 @@ public class Ship
 
 
 
-    public void SetCellsAroundShip(int startRow, int startCol, int size, bool horizontal)
+    private void SetCellsAroundShip(Cell startCell, int size, bool horizontal)
     {
         if (horizontal)
         {
             for (int i = 0; i < size; i++)
             {
-                    AddCellAroundShip(startRow - 1, startCol + i);
-                    AddCellAroundShip(startRow + 1, startCol + i);
+                    AddCellAroundShip(new (startCell.Row - 1, startCell.Col + i));
+                    AddCellAroundShip(new(startCell.Row + 1, startCell.Col + i));
                     
             
                 if (i == 0)
                 {
-                    AddCellAroundShip(startRow, startCol - 1);
-                    AddCellAroundShip(startRow - 1, startCol - 1);
-                    AddCellAroundShip(startRow + 1, startCol - 1);
+                    AddCellAroundShip(startCell with { Col = startCell.Col - 1 });
+                    AddCellAroundShip(new (startCell.Row - 1, startCell.Col - 1));
+                    AddCellAroundShip(new (startCell.Row + 1, startCell.Col - 1));
                 }
 
                 if (i == size - 1)
                 {
-                    AddCellAroundShip(startRow - 1, startCol + size);
-                    AddCellAroundShip(startRow + 1, startCol + size);
-                    AddCellAroundShip(startRow, startCol + size);
+                    AddCellAroundShip(new (startCell.Row - 1, startCell.Col + size));
+                    AddCellAroundShip(new (startCell.Row + 1, startCell.Col + size));
+                    AddCellAroundShip(startCell with { Col = startCell.Col + size });
                 }
             }
         }
@@ -68,31 +73,31 @@ public class Ship
         {
             for (int i = 0; i < size; i++)
             {
-                AddCellAroundShip(startRow + i, startCol + 1);
-                AddCellAroundShip(startRow + i, startCol - 1);
+                AddCellAroundShip(new (startCell.Row + i, startCell.Col + 1));
+                AddCellAroundShip(new (startCell.Row + i, startCell.Col - 1));
 
                 if (i == 0)
                 {
-                    AddCellAroundShip(startRow - 1, startCol + 1);
-                    AddCellAroundShip(startRow - 1, startCol - 1);
-                    AddCellAroundShip(startRow - 1, startCol);
+                    AddCellAroundShip(new (startCell.Row - 1, startCell.Col + 1));
+                    AddCellAroundShip(new (startCell.Row - 1, startCell.Col - 1));
+                    AddCellAroundShip(startCell with { Row = startCell.Row - 1 });
                 }
 
                 if (i == size - 1)
                 {
-                    AddCellAroundShip(startRow + size, startCol);
-                    AddCellAroundShip(startRow + size, startCol + 1);
-                    AddCellAroundShip(startRow + size, startCol - 1);
+                    AddCellAroundShip(startCell with { Row = startCell.Row + size });
+                    AddCellAroundShip(new (startCell.Row + size, startCell.Col + 1));
+                    AddCellAroundShip(new (startCell.Row + size, startCell.Col - 1));
                 }
             }
         }
     }
     
-    public bool OccupiesCell(int row, int col)
+    public bool OccupiesCell(Cell cell)
     {
-        foreach (var cell in Cells)
+        foreach (var shipCell in Cells)
         {
-            if (cell.Row == row && cell.Col == col)
+            if (shipCell.Row == cell.Row && shipCell.Col == cell.Col)
             {
                 return true;
             }
@@ -101,9 +106,9 @@ public class Ship
         return false;
     }
 
-    public void RegisterHit(int row, int col)
+    public void RegisterHit(Cell cell)
     {
-        HitCells.Add((row, col));
+        HitCells.Add(cell);
     }
 
     public bool IsSunk()
@@ -112,7 +117,7 @@ public class Ship
         return true;
     }
 
-    public bool IsCellAroundShip((int row, int col) cell)
+    public bool IsCellAroundShip(Cell cell)
     {
         return CellsAroundShip.Contains(cell);
     }
