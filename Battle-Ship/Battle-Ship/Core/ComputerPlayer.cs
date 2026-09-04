@@ -33,7 +33,7 @@ public class ComputerPlayer : Player
             {
                 cell = (Rnd.Next(10), Rnd.Next(10));
 
-                _isNew = !_usedCoordinates.Contains(cell);
+                _isNew = !_usedCoordinates.Contains(cell) && !_cellsToAvoid.Contains(cell);
             } while (!_isNew);
             
             return (cell.row, cell.col);
@@ -48,7 +48,7 @@ public class ComputerPlayer : Player
         do
         {
             var cell = GetShot();
-            ShotResult result = enemyBoard.ReceiveShot(cell.row, cell.col);
+            var (result, ship) = enemyBoard.ReceiveShot(cell.row, cell.col);
             
             if (enemyBoard.IsAllShipsSunk())
             {
@@ -75,10 +75,6 @@ public class ComputerPlayer : Player
                     } 
                     AddCellsAtShipEndsToQueue(isHorizontal);
                 }
-                // AddDirectionalCellToQueue(cell, _previousCell.Value, isHorizontal);
-                // if (_hitCounter == 3)
-                // {
-                // }
             }
 
             else if (result is ShotResult.Sunk)
@@ -88,6 +84,10 @@ public class ComputerPlayer : Player
                 _previousCell = null;
                 _targetQueue.Clear();
                 _isShot = true;
+                foreach (var cellToAvoid in ship.CellsAroundShip)
+                {
+                    _cellsToAvoid.Enqueue(cellToAvoid);
+                }
             }
             else
             {

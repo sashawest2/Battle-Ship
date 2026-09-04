@@ -17,7 +17,7 @@ namespace Battle_Ship;
             do
             {
                 var cell = GetShot();
-                ShotResult result = enemyBoard.ReceiveShot(cell.row, cell.col);
+                var (result, ship) = enemyBoard.ReceiveShot(cell.row, cell.col);
 
                 if (enemyBoard.IsAllShipsSunk())
                 {
