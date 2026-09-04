@@ -133,11 +133,11 @@ public class Board
         return true;
     }
     
-    public ShotResult ReceiveShot(int row, int col)
+    public (ShotResult res, Ship? ship) ReceiveShot(int row, int col)
     {
         if (grid[row, col] == CellState.Hit || grid[row, col] == CellState.Sunk)
         {
-            return ShotResult.AlreadyShot;
+            return (ShotResult.AlreadyShot, ship:null);
         }
         
         foreach (var ship in Ships)
@@ -151,14 +151,15 @@ public class Board
                     foreach (var cell in ship.Cells)
                     {
                         grid[cell.Row, cell.Col] = CellState.Sunk;
+                        
                     }
-                    return ShotResult.Sunk;
+                    return (ShotResult.Sunk, ship);
                 }
-                return ShotResult.Hit;
+                return (ShotResult.Hit, null);
             }
         }
         grid[row, col] = CellState.Miss;
-        return ShotResult.Miss;
+        return (ShotResult.Miss, null);
     }
 
     private char GetDisplaySymbol(CellState state, bool hideShips)
