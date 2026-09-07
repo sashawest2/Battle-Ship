@@ -40,7 +40,7 @@ public static class SetShipsHelper
     {
         do
         {
-            (int row, int col) cell = UserInputHelper.GetRowAndCol(); 
+           var cell = UserInputHelper.GetRowAndCol(); 
 
             if (!board.IsCellEmpty(cell))
             {
@@ -53,7 +53,7 @@ public static class SetShipsHelper
             int size = UserInputHelper.GetSize();
             bool orientation = UserInputHelper.GetOrientation();
         
-            Ship ship = new Ship(cell.row, cell.col, size, orientation);
+            Ship ship = new Ship(cell, size, orientation);
         
             if (!board.PlaceShip(ship))
             {
