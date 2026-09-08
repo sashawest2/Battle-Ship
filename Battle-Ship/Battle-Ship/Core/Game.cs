@@ -2,14 +2,14 @@ namespace Battle_Ship;
 
 public class Game
 {
-    private readonly bool _isWon = false;
+    public static bool _isWon = false;
 
     public void Play()
     {
         var board1 = new Board();
         var board2 = new Board();
 
-        Player player1 = new HumanPlayer();
+        HumanPlayer player1 = new HumanPlayer();
         SetupShips(board1);
         var player2 = CreateSecondPlayer(board2);
         SetupShipsSecondPlayer(player2, board2);
@@ -17,12 +17,25 @@ public class Game
         do
         {
            player1.MakeMove(board1, board2);
+           
+           if (_isWon)
+           {
+               break;
+           }
+           
            player2.MakeMove(board2, board1);
 
         } while (!_isWon);
-
+        
+        Console.WriteLine($"Your hit percentage is equal {GetHitPercentage(player1) * 100}%");
     }
 
+
+    private double GetHitPercentage(HumanPlayer humanPlayer)
+    {
+        double hitPercentage = (double)humanPlayer._hitCounter / humanPlayer._moveCounter;
+        return hitPercentage;
+    }
     private void SetupShips(Board board)
     {
         SetShipsHelper.SetShips(board);
@@ -70,7 +83,6 @@ public class Game
                 isPlayerCreated = true;
             }
         } while (!isPlayerCreated);
-        
         
         return player2;
     }

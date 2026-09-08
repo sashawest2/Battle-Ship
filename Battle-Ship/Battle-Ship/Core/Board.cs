@@ -36,6 +36,14 @@ public class Board
         return true;
     }
 
+    public void ChangeCellStateAroundShip(Cell cell)
+    {
+        if (grid[cell.Row, cell.Col] != CellState.Miss)
+        {
+            grid[cell.Row, cell.Col] = CellState.AroundShip;
+        }
+    }
+
     public bool IsCellEmpty(Cell cell)
     {
         foreach (var existingShip in Ships)
@@ -56,7 +64,7 @@ public class Board
 
     public void PlaceFleetRandomly(List<Ship> fleet)
     {
-        AddRandomShip(1, fleet);
+        AddRandomShip(1, fleet); 
         AddRandomShip(2, fleet);
         AddRandomShip(3, fleet);
         AddRandomShip(4, fleet);
@@ -134,7 +142,7 @@ public class Board
     
     public (ShotResult res, Ship? ship) ReceiveShot(Cell cell)
     {
-        if (grid[cell.Row, cell.Col] == CellState.Hit || grid[cell.Row, cell.Col] == CellState.Sunk)
+        if (grid[cell.Row, cell.Col] == CellState.Hit || grid[cell.Row, cell.Col] == CellState.Sunk || grid[cell.Row, cell.Col] == CellState.Miss)
         {
             return (ShotResult.AlreadyShot, ship:null);
         }
@@ -145,13 +153,17 @@ public class Board
             {
                 grid[cell.Row, cell.Col] = CellState.Hit;
                 ship.RegisterHit(cell);
+                
+                
                 if (ship.IsSunk())
                 {
                     foreach (var shipCell in ship.Cells)
                     {
-                        grid[cell.Row, cell.Col] = CellState.Sunk;
-                        
+                        grid[shipCell.Row, shipCell.Col] = CellState.Sunk;
                     }
+                    
+                    
+                    
                     return (ShotResult.Sunk, ship);
                 }
                 return (ShotResult.Hit, null);
@@ -161,43 +173,39 @@ public class Board
         return (ShotResult.Miss, null);
     }
 
-    private char GetDisplaySymbol(CellState state, bool hideShips)
+    private static char GetDisplaySymbol(CellState state, bool hideShips)
     {
+        switch (state)
+        {
+            case CellState.Hit:
+                Console.ForegroundColor = ConsoleColor.Green;
+                break;
+            case CellState.Miss:
+                Console.ForegroundColor = ConsoleColor.Red;
+                break;
+            case CellState.Sunk:
+                Console.ForegroundColor = ConsoleColor.Green;
+                break;
+            case CellState.Ship:
+                Console.ForegroundColor = hideShips 
+                    ? ConsoleColor.White 
+                    : ConsoleColor.DarkYellow;
+                break;
+            default:
+                Console.ForegroundColor = ConsoleColor.White;
+                break;
+        }
+        
         return state switch
         {
-            CellState.Empty => '.',
-            CellState.Ship => hideShips ? '.' : 'S',
+            CellState.Empty => ' ',
+            CellState.Ship => hideShips ? ' ' : 'S',
             CellState.Hit => 'H',
             CellState.Miss => 'M',
+            CellState.AroundShip => '.',
             CellState.Sunk => 'X',
             _ => '.'
         };
-    }
-
-    private void PrintResult(ShotResult result)
-    {
-        Console.Clear();
-
-        if (result == ShotResult.Miss)
-        {
-            Console.WriteLine("Miss");
-        }
-
-        if (result == ShotResult.AlreadyShot)
-        {
-            Console.WriteLine("You've already shot to that cell, please choose another one!");
-        }
-
-        if (result == ShotResult.Sunk)
-        {
-            Console.WriteLine("Congratulations! Ship sank");
-        }
-
-        if (result == ShotResult.Hit)
-        {
-            Console.WriteLine("Hit!");
-        }
-        
     }
     
     
@@ -234,6 +242,7 @@ public class Board
             for (int j = 0; j < grid.GetLength(1); j++)
             {
                 Console.Write(GetDisplaySymbol(grid[i, j], hideShips));
+                Console.ForegroundColor = ConsoleColor.White;
                 Console.Write(" | ");
                 counter++;
 

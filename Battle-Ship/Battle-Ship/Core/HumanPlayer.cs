@@ -3,10 +3,13 @@ namespace Battle_Ship;
 
     public class HumanPlayer : Player
     {
+        public int _hitCounter = 0;
+        public int _moveCounter = 0;
+        
         private Cell GetShot()
         {
             Cell cell = UserInputHelper.ParseCoordinate();
-            MoveCounter++;
+            _moveCounter++;
             return cell;
         }
 
@@ -18,12 +21,20 @@ namespace Battle_Ship;
             {
                 var cell = GetShot();
                 var (result, ship) = enemyBoard.ReceiveShot(cell);
-
+                
+                if (result is ShotResult.AlreadyShot)
+                {
+                    _continueShooting = true;
+                    continue;
+                }
+                
                 if (enemyBoard.IsAllShipsSunk())
                 {
-                 
-                    Console.WriteLine($"You won! You've had {MoveCounter} moves!");
-                    _isWon = true;
+                    Console.Clear();
+                    enemyBoard.Print(true);
+                    Console.WriteLine($"You won! You've had {_moveCounter} moves! ");
+                    _hitCounter++;
+                    Game._isWon = true;
                     return;
                 }
 
@@ -31,16 +42,27 @@ namespace Battle_Ship;
                 {
                     
                     Console.Clear();
+
+                    if (result == ShotResult.Sunk)
+                    {
+                        List<Cell> cellsToAvoid = ship.GetCopyOfCellsAroundShip();
+
+                        foreach (var cellToAvoid in cellsToAvoid)
+                        {
+                            enemyBoard.ChangeCellStateAroundShip(cellToAvoid);
+                        }
+                    }
                     enemyBoard.Print(true);
                     Console.WriteLine("Nice shot! You have another attempt!");
-                    _isShot = true;
+                    _continueShooting = true;
+                    _hitCounter++;
                 }
                 else
                 {
-                    _isShot = false;
+                    _continueShooting = false;
                 }
     
-            } while (_isShot); 
+            } while (_continueShooting); 
         
             PrintBoardAfterMove(enemyBoard);
         }

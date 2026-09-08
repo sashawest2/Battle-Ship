@@ -2,10 +2,8 @@ namespace Battle_Ship;
 
 public abstract class Player
 {
-    protected int MoveCounter = 0;
     protected readonly Random Rnd = new Random();
-    public static bool _isWon = false;
-    public static bool _isShot = false;
+    public static bool _continueShooting = false;
 
     // protected virtual (int row, int col) GetShot()
     // { 

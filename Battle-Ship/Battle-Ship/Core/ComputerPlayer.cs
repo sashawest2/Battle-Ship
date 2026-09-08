@@ -13,17 +13,22 @@ public class ComputerPlayer : Player
 
     private Cell GetShot()
     {
+        
         if (_targetQueue.Count == 0)
         {
             PickRandomCoordinate(out var cell);
-        
             _usedCoordinates.Add(cell);
 
             return cell;
         }
 
-        var targetCell = _targetQueue.Dequeue();
-        _usedCoordinates.Add(targetCell);
+        Cell targetCell;
+        do
+        {
+            targetCell = _targetQueue.Dequeue();
+            _usedCoordinates.Add(targetCell);
+        } while (!_cellsToAvoid.Contains(targetCell) && !_usedCoordinates.Contains(targetCell));
+        
         return targetCell;
     }
 
@@ -40,23 +45,26 @@ public class ComputerPlayer : Player
 
     public override void MakeMove(Board playerBoard, Board enemyBoard)
     {
-        Thread.Sleep(500);
+        
         bool isHorizontal = false;
         
         do
         {
+            Console.Clear();
+            enemyBoard.Print(true);
+            Thread.Sleep(1000);
             Cell cell = GetShot();
             var (result, ship) = enemyBoard.ReceiveShot(cell);
             
             if (enemyBoard.IsAllShipsSunk())
             {
-                _isWon = true;
+                Game._isWon = true;
                 return;
             }
 
             if (result is ShotResult.Hit)
             {
-                _isShot = true;
+                _continueShooting = true;
                 _hitCounter++;
                 _hitCells.Add(cell);
 
@@ -81,23 +89,26 @@ public class ComputerPlayer : Player
                 _hitCells.Clear();
                 _previousCell = null;
                 _targetQueue.Clear();
-                _isShot = true;
+                _continueShooting = true;
                 
                 List<Cell> cellsToAvoid = ship.GetCopyOfCellsAroundShip();
                 
                 foreach (var cellToAvoid in cellsToAvoid)
                 {
+                    enemyBoard.ChangeCellStateAroundShip(cellToAvoid);
                     _cellsToAvoid.Enqueue(cellToAvoid);
                 }
             }
             else
             {
-                _isShot = false;
+                _continueShooting = false;
             }
-            
-            
-    
-        } while (_isShot); 
+            enemyBoard.Print(true);
+            // if (_isShot)
+            // {
+            //     Thread.Sleep(1000);
+            // }
+        } while (_continueShooting); 
         
         PrintBoardAfterMove(enemyBoard);
     }

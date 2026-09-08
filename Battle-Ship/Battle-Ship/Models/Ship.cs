@@ -3,7 +3,8 @@ namespace Battle_Ship;
 public class Ship
 {
     int Size { get; set; }
-    public List<Cell> Cells { get; set; }
+    private List<Cell> _cells { get; set; }
+    public IReadOnlyList<Cell> Cells => _cells;
     private List<Cell> HitCells  { get; set; }
     private List<Cell> CellsAroundShip { get; set; }
 
@@ -19,11 +20,16 @@ public class Ship
     {
         return CellsAroundShip.ToList();
     }
+
+    public List<Cell> GetCopyOfCells()
+    {
+        return Cells.ToList();
+    }
     
     public Ship(Cell startCell, int size, bool horizontal)
     {
         Size = size;
-        Cells = new List<Cell>();
+        _cells = new List<Cell>();
         HitCells = new List<Cell>();
         CellsAroundShip = new List<Cell>();
         SetCellsAroundShip(startCell, size, horizontal);
@@ -32,11 +38,11 @@ public class Ship
         {
             if (horizontal)
             {
-                Cells.Add(startCell with { Col = startCell.Col + i });
+                _cells.Add(startCell with { Col = startCell.Col + i });
             }
             else
             {
-               CellsAroundShip.Add(startCell with { Row = startCell.Row  + i });
+               _cells.Add(startCell with { Row = startCell.Row  + i });
             }
         }
         
