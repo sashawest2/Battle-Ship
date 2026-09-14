@@ -37,6 +37,9 @@ public abstract class Player
     //     } while (_isShot); 
     // }
     
-    public abstract void MakeMove(Board board1, Board board2);
+    public abstract MoveType MakeMove(Board humanBoard, Board computerBoard, bool isStat);
+    
+
+    
 }
 

@@ -3,9 +3,13 @@ namespace Battle_Ship;
 public class Board
 {
     private List<Ship> Ships = new List<Ship>();
-    public CellState[,] grid = new CellState[10, 10];
+    private CellState[,] grid = new CellState[10, 10];
     private int moveCounter = 0;
     Random random = new Random();
+    public int oneDeckShipsCount = 0;
+    public int twoDeckShipsCount = 0;
+    public int threeDeckShipsCount = 0;
+    public int fourDeckShipsCount = 0;
 
     public Board()
     {
@@ -31,8 +35,9 @@ public class Board
             {
                 return false;
             }
-            
+
         }
+
         return true;
     }
 
@@ -53,30 +58,30 @@ public class Board
                 return false;
             }
         }
-        
+
         if (grid[cell.Row, cell.Col] != CellState.Empty)
         {
             return false;
         }
-        
+
         return true;
     }
 
     public void PlaceFleetRandomly(List<Ship> fleet)
     {
-        AddRandomShip(1, fleet); 
+        AddRandomShip(1, fleet);
         AddRandomShip(2, fleet);
         AddRandomShip(3, fleet);
         AddRandomShip(4, fleet);
     }
 
     private void AddRandomShip(int size, List<Ship> fleet)
-    {     
+    {
         bool isAdded = false;
-        
+
         for (int i = 0; i < 5 - size; i++)
         {
-            
+
             do
             {
                 Ship? ship = PlaceShipRandomly(size);
@@ -85,26 +90,27 @@ public class Board
                     fleet.Add(ship);
                     isAdded = true;
                 }
-                
+
             } while (!isAdded);
         }
     }
 
     private Ship? PlaceShipRandomly(int size)
     {
-        
+
         for (int i = 0; i < 100; i++)
         {
             Cell cell = new(random.Next(10), random.Next(10));
             bool horizontal = random.Next(2) == 0;
-            
+
             Ship ship = new Ship(cell, size, horizontal);
-            
+
             if (PlaceShip(ship))
             {
                 return ship;
             }
         }
+
         return null;
     }
 
@@ -117,7 +123,7 @@ public class Board
             {
                 grid[cell.Row, cell.Col] = CellState.Ship;
             }
-            
+
             Ships.Add(ship);
 
             return true;
@@ -137,38 +143,39 @@ public class Board
                 return false;
             }
         }
+
         return true;
     }
-    
+
     public (ShotResult res, Ship? ship) ReceiveShot(Cell cell)
     {
-        if (grid[cell.Row, cell.Col] == CellState.Hit || grid[cell.Row, cell.Col] == CellState.Sunk || grid[cell.Row, cell.Col] == CellState.Miss)
+        if (grid[cell.Row, cell.Col] == CellState.Hit || grid[cell.Row, cell.Col] == CellState.Sunk ||
+            grid[cell.Row, cell.Col] == CellState.Miss)
         {
-            return (ShotResult.AlreadyShot, ship:null);
+            return (ShotResult.AlreadyShot, ship: null);
         }
-        
+
         foreach (var ship in Ships)
         {
             if (ship.OccupiesCell(cell))
             {
                 grid[cell.Row, cell.Col] = CellState.Hit;
                 ship.RegisterHit(cell);
-                
-                
+
+
                 if (ship.IsSunk())
                 {
                     foreach (var shipCell in ship.Cells)
                     {
                         grid[shipCell.Row, shipCell.Col] = CellState.Sunk;
                     }
-                    
-                    
-                    
                     return (ShotResult.Sunk, ship);
                 }
+
                 return (ShotResult.Hit, null);
             }
         }
+
         grid[cell.Row, cell.Col] = CellState.Miss;
         return (ShotResult.Miss, null);
     }
@@ -187,15 +194,15 @@ public class Board
                 Console.ForegroundColor = ConsoleColor.Green;
                 break;
             case CellState.Ship:
-                Console.ForegroundColor = hideShips 
-                    ? ConsoleColor.White 
+                Console.ForegroundColor = hideShips
+                    ? ConsoleColor.White
                     : ConsoleColor.DarkYellow;
                 break;
             default:
                 Console.ForegroundColor = ConsoleColor.White;
                 break;
         }
-        
+
         return state switch
         {
             CellState.Empty => ' ',
@@ -207,13 +214,9 @@ public class Board
             _ => '.'
         };
     }
-    
-    
-    public void Print(bool hideShips)
-    {
-        int counter = 0;
 
-    
+    public void PrintHeaders()
+    {
         for (int k = -1; k < 10; k++)
         {
             if (k == 8)
@@ -222,36 +225,125 @@ public class Board
                 Console.Write(" |");
                 continue;
             }
-        
+
             if (k == -1)
             {
                 Console.Write("  ");
                 continue;
             }
+
             Console.Write(k + 1);
             Console.Write(" | ");
-        
+
+            if (k == 9)
+            {
+                Console.Write("   ");
+            }
         }
+    }
+
+    public void GetAmountOfSunkShips()
+    {
+        oneDeckShipsCount = 0;
+        twoDeckShipsCount = 0;
+        threeDeckShipsCount = 0;
+        fourDeckShipsCount = 0;
+        
+        foreach (var ship in Ships)
+        {
+            if (ship.IsSunk()) continue;
+            switch (ship.Size)
+            {
+                case 1:
+                    oneDeckShipsCount++;
+                    break;
+                case 2:
+                    twoDeckShipsCount++;
+                    break;
+                case 3:
+                    threeDeckShipsCount++;
+                    break;
+                case 4:
+                    fourDeckShipsCount++;
+                    break;
+            }
+        }
+    }
+
+    public void PrintRow(int row, bool hideShips)
+    {
+        Console.Write($"{LetterDictionary.RenderLetters[row]} ");
+
+        for (int col = 0; col < grid.GetLength(1); col++)
+        {
+            char symbol = GetDisplaySymbol(grid[row, col], hideShips);
+
+            
+            Console.Write($"{symbol}");
+            Console.ForegroundColor = ConsoleColor.White;
+
+            Console.Write(" | ");
+         
+            Console.ResetColor();
+        }
+    }
     
+
+
+    public void Print(bool hidePlayerShips)
+    {
+        int counter = 0;
+
+
+        for (int k = -1; k < 10; k++)
+        {
+            if (k == 8)
+            {
+                Console.Write(k + 1);
+                Console.Write(" |");
+                continue;
+            }
+
+            if (k == -1)
+            {
+                Console.Write("  ");
+                continue;
+            }
+
+            Console.Write(k + 1);
+            Console.Write(" | ");
+
+            if (k == 9)
+            {
+                Console.Write("   ");
+            }
+        }
+
         Console.WriteLine();
-    
+
         for (int i = 0; i < grid.GetLength(0); i++)
         {
             Console.Write(LetterDictionary.RenderLetters[i]);
             Console.Write(" ");
             for (int j = 0; j < grid.GetLength(1); j++)
             {
-                Console.Write(GetDisplaySymbol(grid[i, j], hideShips));
+                Console.Write(GetDisplaySymbol(grid[i, j], hidePlayerShips));
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.Write(" | ");
                 counter++;
 
                 if (counter == 10)
                 {
-                    Console.WriteLine();
-                    counter = 0;
+                    if (i == 9)
+                    {
+                        Console.Write("  ");
+                    }
+                    else
+                    {
+                        counter = 0;
+                        Console.WriteLine();
+                    }
                 }
-            
             }
         }
     }

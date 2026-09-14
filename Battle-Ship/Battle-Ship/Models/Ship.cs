@@ -2,7 +2,7 @@ namespace Battle_Ship;
 
 public class Ship
 {
-    int Size { get; set; }
+    public int Size { get; init; }
     private List<Cell> _cells { get; set; }
     public IReadOnlyList<Cell> Cells => _cells;
     private List<Cell> HitCells  { get; set; }

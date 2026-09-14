@@ -27,7 +27,7 @@ public class ComputerPlayer : Player
         {
             targetCell = _targetQueue.Dequeue();
             _usedCoordinates.Add(targetCell);
-        } while (!_cellsToAvoid.Contains(targetCell) && !_usedCoordinates.Contains(targetCell));
+        } while (_cellsToAvoid.Contains(targetCell));
         
         return targetCell;
     }
@@ -43,23 +43,25 @@ public class ComputerPlayer : Player
     }
     
 
-    public override void MakeMove(Board playerBoard, Board enemyBoard)
+    public override MoveType MakeMove(Board humanBoard, Board computerBoard, bool isStat)
     {
+        Console.Clear();
+        Game.NewPrint(humanBoard, computerBoard);
         
         bool isHorizontal = false;
         
         do
         {
-            Console.Clear();
-            enemyBoard.Print(true);
-            Thread.Sleep(1000);
             Cell cell = GetShot();
-            var (result, ship) = enemyBoard.ReceiveShot(cell);
+            var (result, ship) = humanBoard.ReceiveShot(cell);
             
-            if (enemyBoard.IsAllShipsSunk())
+            if (humanBoard.IsAllShipsSunk())
             {
+                Console.Clear();
+                Game.NewPrint(humanBoard, computerBoard);
+                Game.ComputerWinMessage();
                 Game._isWon = true;
-                return;
+                break;
             }
 
             if (result is ShotResult.Hit)
@@ -94,8 +96,8 @@ public class ComputerPlayer : Player
                 List<Cell> cellsToAvoid = ship.GetCopyOfCellsAroundShip();
                 
                 foreach (var cellToAvoid in cellsToAvoid)
-                {
-                    enemyBoard.ChangeCellStateAroundShip(cellToAvoid);
+                { 
+                    humanBoard.ChangeCellStateAroundShip(cellToAvoid);
                     _cellsToAvoid.Enqueue(cellToAvoid);
                 }
             }
@@ -103,14 +105,17 @@ public class ComputerPlayer : Player
             {
                 _continueShooting = false;
             }
-            enemyBoard.Print(true);
-            // if (_isShot)
-            // {
-            //     Thread.Sleep(1000);
-            // }
+
+            if (!humanBoard.IsAllShipsSunk())
+            {
+                Thread.Sleep(1000);
+                Console.Clear();
+                Game.NewPrint(humanBoard, computerBoard);
+            }
+ 
         } while (_continueShooting); 
-        
-        PrintBoardAfterMove(enemyBoard);
+
+        return MoveType.Shoot;
     }
 
     private bool GetShipDirection(Cell cell, out bool isHorizontal)
@@ -127,12 +132,15 @@ public class ComputerPlayer : Player
             var min = _hitCells.MinBy(x => x.Col);
             var max = _hitCells.MaxBy(x => x.Col);
 
-            if (min.Col > 0)
+            if (min.Col > 0 && !_usedCoordinates.Contains(min with { Col = min.Col - 1 }) && 
+                !_cellsToAvoid.Contains(min with {Col = min.Col - 1}))
             {
+                
                 _targetQueue.Enqueue(min with { Col = min.Col - 1 });
             }
 
-            if (max.Col < 9)
+            if (max.Col < 9 && !_usedCoordinates.Contains(max with { Col = max.Col + 1 }) && 
+                !_cellsToAvoid.Contains(max with { Col = max.Col + 1 }))
             {
                 _targetQueue.Enqueue(max with { Col = max.Col + 1 });
             }
@@ -142,45 +150,48 @@ public class ComputerPlayer : Player
             var min = _hitCells.MinBy(x => x.Row);
             var max = _hitCells.MaxBy(x => x.Row);
 
-            if (min.Row > 0)
+            if (min.Row > 0 && !_usedCoordinates.Contains(min with {Row = min.Row - 1}) && 
+                !_cellsToAvoid.Contains(min with {Row = min.Row - 1}))
             {
                 _targetQueue.Enqueue(min with { Row = min.Row - 1 });
             }
 
-            if (max.Row < 9)
+            if (max.Row < 9 && !_usedCoordinates.Contains(max with { Row = max.Row + 1 }) && 
+                !_cellsToAvoid.Contains(max with { Row = max.Row + 1 }))
             {
                 _targetQueue.Enqueue(max with { Row = max.Row + 1 });
             }
             
         }
     }
-    private static void PrintBoardAfterMove(Board enemyBoard)
+    private static void PrintBoardAfterMove(Board playersBoard, Board computerBoard)
     {
         Console.Clear();
-        enemyBoard.Print(true);
-        Console.WriteLine("Press any key to pass the run");
-        Console.ReadLine();
-        Console.Clear();
+        Game.NewPrint(playersBoard, computerBoard);
     }
 
     private void AddCellsToQueue(Cell cell)
     {
-        if (cell.Row != 0)
+        if (cell.Row != 0 && !_usedCoordinates.Contains(cell with { Row = cell.Row - 1 }) 
+                                                        && !_cellsToAvoid.Contains(cell with { Row = cell.Row - 1 }))
         {
             _targetQueue.Enqueue(cell with { Row = cell.Row - 1 });
         }
 
-        if (cell.Col != 0)
+        if (cell.Col != 0 && !_usedCoordinates.Contains(cell with { Col = cell.Col - 1 }) && 
+            !_cellsToAvoid.Contains(cell with { Col = cell.Col - 1 })) 
         {
             _targetQueue.Enqueue(cell with { Col = cell.Col - 1 });
         }
 
-        if (cell.Row != 9)
+        if (cell.Row != 9 && !_usedCoordinates.Contains(cell with { Row = cell.Row + 1 }) && 
+            !_cellsToAvoid.Contains(cell with { Row = cell.Row + 1 }))
         {
             _targetQueue.Enqueue(cell with {Row = cell.Row + 1});
         }
 
-        if (cell.Col != 9)
+        if (cell.Col != 9 && !_usedCoordinates.Contains(cell with { Col = cell.Col + 1 }) &&
+            !_cellsToAvoid.Contains(cell with { Col = cell.Col + 1 }))
         {
             _targetQueue.Enqueue(cell with {Col = cell.Col + 1});
         }
