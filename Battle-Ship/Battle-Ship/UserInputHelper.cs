@@ -2,20 +2,16 @@ namespace Battle_Ship;
 
 public static class UserInputHelper
 {
-    public static Cell ParseCoordinate()
+    private static bool TryParseCoordinate(string input, out Cell cell)
     {
-        do
-        {
             int row = -1;
             int col = -1;
-
-            Console.Write("Please enter row and column for a ship:");
-            string input = Console.ReadLine();
-
+            cell = new Cell();
+            
             if (string.IsNullOrEmpty(input))
             {
                 Console.WriteLine("Coordinates cannot be empty!");
-                continue;
+                return false;
             }
 
             char letter = char.ToUpper(input[0]);
@@ -23,33 +19,41 @@ public static class UserInputHelper
             if (!LetterDictionary.ParsingLetters.ContainsKey(letter))
             {
                 Console.WriteLine("Coordinates should contain a letter!");
-                continue;
+                return false;
             }
 
             if (!int.TryParse(input.Substring(1), out int number))
             {
                 Console.WriteLine("Coordinates should contain a number!");
-                continue;
+                return false;
             }
 
             if (number < 1 || number > 10)
             {
                 Console.WriteLine("Coordinates should contain number between 1 and 10!");
-                continue;
+                return false;
             }
 
-            Cell cell = new(LetterDictionary.ParsingLetters[letter], number - 1);
+            cell = new(LetterDictionary.ParsingLetters[letter], number - 1);
 
-            return cell;
-        } while (true);
+            return true;
     }
+
+    public static string? ReadFromConsole()
+    {
+        Console.Write("Please enter row and column for a ship:"); 
+        string? input = Console.ReadLine();
+        
+        return input;
+    }
+    
     
     public static Cell GetRowAndCol()
     {
         Console.Write("Please enter start row and column for a ship:");
-
-        var cell = ParseCoordinate();
-
+        var input = ReadFromConsole();
+        TryParseCoordinate(input, out var cell);
+        
         return cell;
     }
     
@@ -86,4 +90,28 @@ public static class UserInputHelper
         }
     }
 
+    public static (MoveType Type, Cell Cell) UserInput()
+    {
+        bool isCorrectCommandInput = false;
+        do
+        {
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("Type the command or desired cell:");
+            var inputRaw = Console.ReadLine();
+            switch (inputRaw)
+            {
+                case "/stat":
+                    return (MoveType.Stat, new Cell());
+                default:
+                    if (!TryParseCoordinate(inputRaw, out Cell cell))
+                    {
+                        isCorrectCommandInput = false;
+                        break;
+                    }
+                    return (MoveType.Shoot, cell);
+            }
+        }
+        while (!isCorrectCommandInput);
+        throw new Exception("Invalid command!");
+    }
 }

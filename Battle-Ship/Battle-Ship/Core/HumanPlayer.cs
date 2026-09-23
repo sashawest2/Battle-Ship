@@ -3,61 +3,89 @@ namespace Battle_Ship;
 
     public class HumanPlayer : Player
     {
-        private Cell GetShot()
-        {
-            Cell cell = UserInputHelper.ParseCoordinate();
-            MoveCounter++;
-            return cell;
-        }
+        public int _hitCounter = 0;
+        public int MoveCounter = 0;
 
-        public override void MakeMove(Board playerBoard, Board enemyBoard)
+
+        public override MoveType MakeMove(Board humanBoard, Board computerBoard, bool isStat)
         {
-            PrintBoardBeforeMove(playerBoard, enemyBoard);
-        
+            if (!isStat)
+            {
+                PrintBoardBeforeMove(humanBoard, computerBoard);
+            }
+            
             do
             {
-                var cell = GetShot();
-                var (result, ship) = enemyBoard.ReceiveShot(cell);
-
-                if (enemyBoard.IsAllShipsSunk())
+                var input = UserInputHelper.UserInput();
+                if (input.Type == MoveType.Stat)
                 {
-                 
-                    Console.WriteLine($"You won! You've had {MoveCounter} moves!");
-                    _isWon = true;
-                    return;
+                    return MoveType.Stat;
+                }
+            
+                var cell = input.Cell;
+                Shoot(cell, humanBoard, computerBoard);
+            } while (_continueShooting);
+        
+            PrintBoardAfterMove(humanBoard, computerBoard);
+
+            return MoveType.Shoot;
+        }
+
+        private bool Shoot(Cell cell, Board humanBoard, Board computerBoard)
+        {
+                var (result, ship) = computerBoard.ReceiveShot(cell);
+                
+                if (result is ShotResult.AlreadyShot)
+                {
+                    return _continueShooting = true;
+                }
+                
+                MoveCounter++;
+                
+                if (computerBoard.IsAllShipsSunk())
+                {
+                    _hitCounter++;
+                    Console.Clear();
+                    Game.NewPrint(humanBoard, computerBoard);
+                    Console.WriteLine($"You won! You've had {MoveCounter} moves! ");
+                    Game._isWon = true;
+                    return _continueShooting = false;
                 }
 
                 if (result is ShotResult.Hit or ShotResult.Sunk)
                 {
-                    
                     Console.Clear();
-                    enemyBoard.Print(true);
+                    _hitCounter++;
+                    
+                    if (result == ShotResult.Sunk)
+                    {
+                        List<Cell> cellsToAvoid = ship.GetCopyOfCellsAroundShip();
+                        
+                        foreach (var cellToAvoid in cellsToAvoid)
+                        {
+                            computerBoard.ChangeCellStateAroundShip(cellToAvoid);
+                        }
+                    }
+                    Console.Clear();
+                    Game.NewPrint(humanBoard, computerBoard);
                     Console.WriteLine("Nice shot! You have another attempt!");
-                    _isShot = true;
+                    return _continueShooting = true;
                 }
-                else
-                {
-                    _isShot = false;
-                }
-    
-            } while (_isShot); 
+                return _continueShooting = false;
+            }
         
-            PrintBoardAfterMove(enemyBoard);
-        }
-        
-        private static void PrintBoardBeforeMove(Board myBoard, Board enemyBoard)
+        private static void PrintBoardBeforeMove(Board humanBoard, Board computerBoard)
         {
-            myBoard.Print(false);
-            Console.WriteLine();
-            enemyBoard.Print(true);
+            Console.Clear();
+            Game.NewPrint(humanBoard, computerBoard);
         }
 
-        private static void PrintBoardAfterMove(Board enemyBoard)
+        private static void PrintBoardAfterMove(Board humanBoard, Board computerBoard)
         {
-            Console.Clear();
-            enemyBoard.Print(true);
-            Console.WriteLine("Press any key to pass the run");
-            Console.ReadLine();
-            Console.Clear();
+            if (!computerBoard.IsAllShipsSunk())
+            {
+                Console.Clear();
+                Game.NewPrint(humanBoard, computerBoard);
+            }
         }
     }

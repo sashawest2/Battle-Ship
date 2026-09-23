@@ -44,7 +44,7 @@ public static class SetShipsHelper
 
             if (!board.IsCellEmpty(cell))
             {
-                Console.ForegroundColor = ConsoleColor.Red;
+                Console.ForegroundColor = ConsoleColor.Red; 
                 Console.WriteLine("This cell is around another ship or not empty!");
                 Console.ResetColor();
                 continue;   
